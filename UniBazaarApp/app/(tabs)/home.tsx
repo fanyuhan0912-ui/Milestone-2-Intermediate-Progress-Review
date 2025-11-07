@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, Image, ActivityIndicator, TouchableOpacity } from "react-native";
-import { db } from "../../firebase/firebaseConfig"; // 从 (tabs) 回到项目根，再进 firebase
+import { db } from "../../firebase/firebaseConfig"; 
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 
 type Item = {
@@ -18,10 +18,6 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 如果你的文档里已有 createdAt:number，可以用倒序排序：
-    // const q = query(collection(db, "items"), orderBy("createdAt", "desc"));
-
-    // 若刚开始还没给每条文档加 createdAt，就先用不排序的：
     const q = query(collection(db, "items"));
 
     const unsub = onSnapshot(
@@ -69,7 +65,7 @@ export default function HomeScreen() {
         backgroundColor: "white",
       }}
     >
-      {/* 左侧图片/占位 */}
+      {/* the left side image*/}
       {item.imageUrl ? (
         <Image
           source={{ uri: item.imageUrl }}
@@ -91,7 +87,7 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* 右侧文字 */}
+      {/* right side text*/}
       <View style={{ flex: 1 }}>
         <Text style={{ fontWeight: "600", fontSize: 16 }} numberOfLines={1}>
           {item.title || "(Untitled)"}{" "}
