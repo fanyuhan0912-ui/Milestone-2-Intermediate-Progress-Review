@@ -1,26 +1,107 @@
-import React, { useState } from "react";
-import { View, Text, FlatList, Image, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, FlatList, Image, ActivityIndicator, TouchableOpacity } from "react-native";
+import { db } from "../../firebase/firebaseConfig"; // 从 (tabs) 回到项目根，再进 firebase
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+
+type Item = {
+  id: string;
+  title?: string;
+  description?: string;
+  price?: number;
+  imageUrl?: string;
+  sellerId?: string;
+  createdAt?: number;
+};
 
 export default function HomeScreen() {
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [items] = useState([
-    { id: "1", title: "Casio Calculator", price: 25, description: "Like new", imageUrl: "" },
-    { id: "2", title: "Textbook IAT 201", price: 15, description: "Highlight inside", imageUrl: "" },
-  ]);
+  useEffect(() => {
+    // 如果你的文档里已有 createdAt:number，可以用倒序排序：
+    // const q = query(collection(db, "items"), orderBy("createdAt", "desc"));
 
-  const renderItem = ({ item }: any) => (
-    <TouchableOpacity style={{ padding: 12, borderBottomWidth: 1, borderColor: "#eee", flexDirection: "row" }}>
-      <View style={{ width: 84, height: 84, backgroundColor: "#f2f2f2", borderRadius: 8, marginRight: 12,
-        alignItems:"center", justifyContent:"center" }}>
-        <Text style={{ color: "#888" }}>{item.imageUrl ? "IMG" : "No Image"}</Text>
+    // 若刚开始还没给每条文档加 createdAt，就先用不排序的：
+    const q = query(collection(db, "items"));
+
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const rows: Item[] = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+        setItems(rows);
+        setLoading(false);
+      },
+      (err) => {
+        console.error("onSnapshot items error:", err);
+        setLoading(false);
+      }
+    );
+
+    return () => unsub();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size="large" />
+        <Text style={{ marginTop: 8 }}>Loading items…</Text>
       </View>
+    );
+  }
 
+  if (!items.length) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 20 }}>
+        <Text style={{ fontSize: 16, fontWeight: "600" }}>No items yet.</Text>
+        <Text style={{ marginTop: 6, opacity: 0.6 }}>Go to Post tab to create one.</Text>
+      </View>
+    );
+  }
+
+  const renderItem = ({ item }: { item: Item }) => (
+    <TouchableOpacity
+      activeOpacity={0.75}
+      style={{
+        padding: 12,
+        borderBottomWidth: 1,
+        borderColor: "#eee",
+        flexDirection: "row",
+        backgroundColor: "white",
+      }}
+    >
+      {/* 左侧图片/占位 */}
+      {item.imageUrl ? (
+        <Image
+          source={{ uri: item.imageUrl }}
+          style={{ width: 84, height: 84, borderRadius: 8, backgroundColor: "#f2f2f2", marginRight: 12 }}
+        />
+      ) : (
+        <View
+          style={{
+            width: 84,
+            height: 84,
+            borderRadius: 8,
+            backgroundColor: "#f5f5f5",
+            alignItems: "center",
+            justifyContent: "center",
+            marginRight: 12,
+          }}
+        >
+          <Text style={{ fontSize: 12, color: "#888" }}>No Image</Text>
+        </View>
+      )}
+
+      {/* 右侧文字 */}
       <View style={{ flex: 1 }}>
         <Text style={{ fontWeight: "600", fontSize: 16 }} numberOfLines={1}>
-          {item.title} · ${item.price}
+          {item.title || "(Untitled)"}{" "}
+          {typeof item.price === "number" ? `· $${item.price}` : ""}
         </Text>
         <Text numberOfLines={2} style={{ marginTop: 4, color: "#444" }}>
-          {item.description}
+          {item.description || "No description."}
+        </Text>
+        <Text style={{ marginTop: 6, fontSize: 12, color: "#888" }}>
+          by {item.sellerId ? item.sellerId.slice(0, 6) : "unknown"}
         </Text>
       </View>
     </TouchableOpacity>
