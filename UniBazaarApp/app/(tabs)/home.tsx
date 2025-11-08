@@ -119,7 +119,7 @@ return (
       <WeatherBanner />
     </View>
 
-    {/* 商品列表 */}
+    {/* item list*/}
     <FlatList
       data={items}
       keyExtractor={(it) => it.id}
