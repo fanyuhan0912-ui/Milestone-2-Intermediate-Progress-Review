@@ -8,10 +8,10 @@ export default function AddScreen() {
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState<string>("");
   const [description, setDescription] = useState("");
-  const [imageUri, setImageUri] = useState<string | null>(null); 
+  const [imageUri, setImageUri] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // 选相册
+  // choose the image in library
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
@@ -27,7 +27,7 @@ export default function AddScreen() {
     }
   };
 
-  // 拍照
+  // take the picture
   const takePhoto = async () => {
     const cam = await ImagePicker.requestCameraPermissionsAsync();
     if (cam.status !== "granted") {
@@ -42,7 +42,7 @@ export default function AddScreen() {
 
   const submit = async () => {
     if (!title.trim()) return Alert.alert("lack of the text", "Title is required");
-    if (!price.trim() || isNaN(Number(price))) return Alert.alert("缺少字段", "Price is required");
+    if (!price.trim() || isNaN(Number(price))) return Alert.alert("lack of the text", "Price is required");
 
     try {
       setSubmitting(true);
@@ -69,7 +69,10 @@ export default function AddScreen() {
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, backgroundColor: "#fff", flexGrow: 1 }}>
-      <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 12 }}>Post a new item</Text>
+      <Text style={{ fontSize: 18,
+          paddingTop:100,
+          fontWeight: "700",
+          marginBottom: 12 }}>Post a new item</Text>
 
       <Text>Title</Text>
       <TextInput
