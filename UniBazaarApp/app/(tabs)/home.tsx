@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, Image, ActivityIndicator, TouchableOpacity } from "react-native";
 import { db } from "../../firebase/firebaseConfig";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import WeatherBanner from "../../components/WeatherBanner";
+
 
 type Item = {
   id: string;
@@ -106,14 +108,29 @@ export default function HomeScreen() {
 
 
 
-  return (
+return (
+  <View style={{ flex: 1, backgroundColor: "#fff" }}>
+
+    <View style={{
+      alignItems: "center",
+      marginTop: 50,
+      marginBottom: 20
+    }}>
+      <WeatherBanner />
+    </View>
+
+    {/* 商品列表 */}
     <FlatList
       data={items}
       keyExtractor={(it) => it.id}
       renderItem={renderItem}
       contentContainerStyle={{
-          paddingTop:100,
-          paddingBottom: 24 }}
+        paddingBottom: 24
+      }}
     />
-  );
+
+  </View>
+);
+
+
 }
