@@ -95,12 +95,7 @@ export default function AddScreen() {
     })();
   }, []);
 
-  useEffect(() => {
-    const clearDraft = async () => {
-      await AsyncStorage.removeItem("draftItem");
-    };
-    clearDraft();
-  }, []);
+
 
 
   useEffect(() => {
@@ -172,7 +167,7 @@ export default function AddScreen() {
     >
       <ScrollView
         contentContainerStyle={{
-          paddingTop: 60, 
+          paddingTop: 60,
           paddingHorizontal: 16,
           paddingBottom: 24,
         }}
