@@ -78,7 +78,7 @@ export default function NearMeScreen() {
   useEffect(() => {
     if (!me) return;
     const user = auth.currentUser;
-    if (!user) return; 
+    if (!user) return;
 
     const pushPresence = async () => {
       try {
