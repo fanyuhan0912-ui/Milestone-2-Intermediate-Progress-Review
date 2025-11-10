@@ -36,7 +36,7 @@ export default function ChatScreen() {
   const [loading, setLoading] = useState(true);
   const listRef = useRef<FlatList<Msg>>(null);
 
- 
+
   useEffect(() => {
     const q = query(
       collection(db, ...ROOM_PATH),
