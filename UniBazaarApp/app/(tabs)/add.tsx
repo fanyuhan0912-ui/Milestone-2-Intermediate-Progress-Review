@@ -76,7 +76,7 @@ export default function AddScreen() {
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState<string>("");
   const [description, setDescription] = useState("");
-  const [imageUri, setImageUri] = useState<string | null>(null); // file:// 或 asset://
+  const [imageUri, setImageUri] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
 
@@ -144,7 +144,7 @@ export default function AddScreen() {
         createdAt: Date.now(),
       });
 
-      // 发布成功后清除草稿
+
       await AsyncStorage.removeItem(DRAFT_KEY);
 
       setSubmitting(false);

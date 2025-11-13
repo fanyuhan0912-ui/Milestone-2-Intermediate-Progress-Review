@@ -160,7 +160,7 @@ export default function NearMeScreen() {
         showsUserLocation={false}
         showsMyLocationButton={Platform.OS === "android"}
       >
-        {/* 我的位置 */}
+        {/* my position*/}
         {me && (
           <>
             <Marker

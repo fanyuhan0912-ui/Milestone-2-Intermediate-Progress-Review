@@ -12,7 +12,7 @@ export default function TabLayout() {
         tabBarInactiveTintColor: "#95A5A6",
       }}
     >
-      {/* 🏠 Home */}
+      {/*  Home */}
       <Tabs.Screen
         name="home"
         options={{
@@ -23,7 +23,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 📍 Near Me */}
+      {/* Near Me */}
       <Tabs.Screen
         name="nearme"
         options={{
@@ -34,11 +34,11 @@ export default function TabLayout() {
         }}
       />
 
-      {/* ➕ Add 中间悬浮按钮 */}
+      {/*Add */}
       <Tabs.Screen
         name="add"
         options={{
-          tabBarButton: (props: any) => (   // 👈 加上 :any
+          tabBarButton: (props: any) => (
             <TouchableOpacity
               {...props}
               style={{
@@ -68,7 +68,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 💬 Chat */}
+      {/*  Chat */}
       <Tabs.Screen
         name="chat"
         options={{
@@ -79,7 +79,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 👤 Me */}
+      {/*  Me */}
       <Tabs.Screen
         name="profile"
         options={{

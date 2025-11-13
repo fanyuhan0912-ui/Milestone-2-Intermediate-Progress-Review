@@ -83,7 +83,7 @@ export default function ChatScreen() {
         createdAt: serverTimestamp(),
       });
       setText("");
-      // 轻微滚动到最新
+
       setTimeout(() => listRef.current?.scrollToOffset({ offset: 0, animated: true }), 50);
     } catch (e) {
       console.error("send message failed:", e);
@@ -150,7 +150,7 @@ export default function ChatScreen() {
         contentContainerStyle={{ paddingTop: 8, paddingBottom: 8 }}
       />
 
-      {/* 底部输入区 */}
+
       <View
         style={{
           flexDirection: "row",
