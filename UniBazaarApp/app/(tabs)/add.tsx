@@ -17,6 +17,14 @@ import { addDoc, collection } from "firebase/firestore";
 
 const DRAFT_KEY = "add_draft_v1";
 
+// 🔹和 HomeScreen 用的一样的分类 key
+const CATEGORY_OPTIONS = [
+  { key: "furniture", label: "Furniture" },
+  { key: "books", label: "Books" },
+  { key: "clothing", label: "Clothing" },
+  { key: "electronics", label: "Electronics" },
+];
+
 function Label({ children }: { children: React.ReactNode }) {
   return <Text style={{ fontWeight: "600", marginTop: 12 }}>{children}</Text>;
 }
@@ -79,7 +87,10 @@ export default function AddScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // 🔹 新增：当前选择的分类（默认给一个，比如 furniture）
+  const [category, setCategory] = useState<string>("furniture");
 
+  // 载入草稿
   useEffect(() => {
     (async () => {
       try {
@@ -90,18 +101,17 @@ export default function AddScreen() {
           setPrice(d.price ?? "");
           setDescription(d.description ?? "");
           setImageUri(d.imageUri ?? null);
+          setCategory(d.category ?? "furniture"); // ✅ 从草稿恢复分类
         }
       } catch {}
     })();
   }, []);
 
-
-
-
+  // 保存草稿
   useEffect(() => {
-    const draft = JSON.stringify({ title, price, description, imageUri });
+    const draft = JSON.stringify({ title, price, description, imageUri, category });
     AsyncStorage.setItem(DRAFT_KEY, draft).catch(() => {});
-  }, [title, price, description, imageUri]);
+  }, [title, price, description, imageUri, category]);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -142,8 +152,9 @@ export default function AddScreen() {
         imageUrl: imageUri ?? "",
         sellerId: auth?.currentUser?.uid || "anon",
         createdAt: Date.now(),
+        // ✅ 把分类写进 Firestore
+        category: category, 
       });
-
 
       await AsyncStorage.removeItem(DRAFT_KEY);
 
@@ -153,6 +164,7 @@ export default function AddScreen() {
       setPrice("");
       setDescription("");
       setImageUri(null);
+      setCategory("furniture"); // 重置回默认分类
     } catch (e: any) {
       setSubmitting(false);
       console.error(e);
@@ -204,6 +216,46 @@ export default function AddScreen() {
             marginTop: 6,
           }}
         />
+
+        {/* 🔹 新增：Category 选择 */}
+        <Label>Category</Label>
+        <View
+          style={{
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: 8,
+            marginTop: 8,
+          }}
+        >
+          {CATEGORY_OPTIONS.map((opt) => {
+            const isActive = category === opt.key;
+            return (
+              <TouchableOpacity
+                key={opt.key}
+                onPress={() => setCategory(opt.key)}
+                activeOpacity={0.8}
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderColor: isActive ? "#2f6fed" : "#d4d4d4",
+                  backgroundColor: isActive ? "#E3F0FF" : "#ffffff",
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: isActive ? "700" : "500",
+                    color: isActive ? "#224594" : "#555",
+                  }}
+                >
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
         <Label>Description</Label>
         <TextInput
