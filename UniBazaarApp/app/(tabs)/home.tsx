@@ -14,6 +14,8 @@ import { db } from "../../firebase/firebaseConfig";
 import { collection, query, onSnapshot } from "firebase/firestore";
 import WeatherBanner from "../../components/WeatherBanner";
 import { useFavorites } from "../FavoritesContext"; // 修正了路径
+import { auth } from "../../firebase/firebaseConfig";
+import { router } from "expo-router";
 
 // 本地分类图片（记得把这些图片放到对应路径）
 const CATEGORIES = [
@@ -45,7 +47,6 @@ const CATEGORIES = [
 ];
 
 
-
 type Item = {
   id: string;
   title?: string;
@@ -59,10 +60,21 @@ type Item = {
 };
 
 export default function HomeScreen() {
+  const [userName, setUserName] = useState("");
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toggleFavorite, isFavorite } = useFavorites(); // 使用全局收藏夹
+  const { toggleFavorite, isFavorite } = useFavorites();
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
+
+ // 读取当前登录用户的名字（来自 Firebase Auth.displayName）
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (user) {
+      setUserName(user.displayName || "");
+    }
+  }, []);
 
   // ========= 连接 Firestore =========
   useEffect(() => {
@@ -111,76 +123,99 @@ export default function HomeScreen() {
     );
   }
 
-  // 当前选中的分类名称（用来替换 All Items 文本）
-  const currentCategoryLabel =
-    CATEGORIES.find((c) => c.key === selectedCategory)?.label ||
-    "All Items";
+// 当前选中的分类名称（用来替换 All Items 文本）
+const currentCategoryLabel =
+  CATEGORIES.find((c) => c.key === selectedCategory)?.label || "All Items";
 
-  // 过滤出来要展示的 items
-  const displayedItems =
-    selectedCategory === "all"
-      ? items
-      : items.filter(
-          (item) =>
-            (item.category || "").toLowerCase() ===
-            selectedCategory.toLowerCase()
-        );
+// 先按分类过滤一轮
+const itemsByCategory =
+  selectedCategory === "all"
+    ? items
+    : items.filter(
+        (item) =>
+          (item.category || "").toLowerCase() ===
+          selectedCategory.toLowerCase()
+      );
+
+// 再按搜索关键词过滤（标题 / 描述里包含就算匹配）
+const displayedItems = itemsByCategory.filter((item) => {
+  const q = searchQuery.trim().toLowerCase();
+  if (!q) return true; // 🔹没输入搜索内容，就不过滤
+
+  const title = (item.title || "").toLowerCase();
+  const desc = (item.description || "").toLowerCase();
+
+  return title.includes(q) || desc.includes(q);
+});
 
   // ========= 渲染单个卡片 =========
-  const renderItem = ({ item }: { item: Item }) => {
-    const favorite = isFavorite(item.id);
-    const distance = item.distanceKm ?? 0.5; // 临时假数据
+ const renderItem = ({ item }: { item: Item }) => {
+  const favorite = isFavorite(item.id);
+  const distance = item.distanceKm ?? 0.5; // 临时假数据
 
-    return (
-      <View style={styles.shadowWrapper}>
-        <View style={styles.card}>
-          {/* 图片区域 */}
-          <View style={styles.imageWrapper}>
-            {item.imageUrl ? (
-              <Image
-                source={{ uri: item.imageUrl }}
-                style={styles.cardImage}
-                resizeMode="cover"
-              />
-            ) : (
-              <View style={[styles.cardImage, styles.noImageBox]}>
-                <Text style={styles.noImageText}>No Image</Text>
-              </View>
-            )}
+  // 点击卡片时跳转到 /item/[id]
+  const handleOpenDetail = () => {
+    router.push({
+      pathname: "/item/[id]",
+      params: { id: item.id },
+    });
+  };
 
-            {/* 右上角心形按钮（收藏占位） */}
-            <TouchableOpacity
-              style={styles.heartButton}
-              onPress={() => toggleFavorite(item)}
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name={favorite ? "heart" : "heart-outline"}
-                size={22}
-                color={favorite ? "#FF7E3E" : "#ffffff"}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* 底部文字区域 */}
-          <View style={styles.cardBody}>
-            <Text style={styles.cardTitle} numberOfLines={1}>
-              {item.title || "(Untitled)"}
-            </Text>
-
-            {typeof item.price === "number" && (
-              <Text style={styles.price}>${item.price}</Text>
-            )}
-
-            <View style={styles.metaRow}>
-              <Ionicons name="location-sharp" size={14} color="#9ca3af" />
-              <Text style={styles.metaText}>{distance} km</Text>
+  return (
+    <TouchableOpacity
+      style={styles.shadowWrapper}
+      activeOpacity={0.9}
+      onPress={handleOpenDetail}   // ⭐ 点整个卡片进入详情
+    >
+      <View style={styles.card}>
+        {/* 图片区域 */}
+        <View style={styles.imageWrapper}>
+          {item.imageUrl ? (
+            <Image
+              source={{ uri: item.imageUrl }}
+              style={styles.cardImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={[styles.cardImage, styles.noImageBox]}>
+              <Text style={styles.noImageText}>No Image</Text>
             </View>
+          )}
+
+          {/* 右上角心形按钮（收藏） */}
+          <TouchableOpacity
+            style={styles.heartButton}
+            onPress={() => toggleFavorite(item)}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name={favorite ? "heart" : "heart-outline"}
+              size={22}
+              color={favorite ? "#FF7E3E" : "#ffffff"}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* 底部文字区域 */}
+        <View style={styles.cardBody}>
+          <Text style={styles.cardTitle} numberOfLines={1}>
+            {item.title || "(Untitled)"}
+          </Text>
+
+          {typeof item.price === "number" && (
+            <Text style={styles.price}>${item.price}</Text>
+          )}
+
+          <View style={styles.metaRow}>
+            <Ionicons name="location-sharp" size={14} color="#9ca3af" />
+            <Text style={styles.metaText}>{distance} km</Text>
           </View>
         </View>
       </View>
-    );
-  };
+    </TouchableOpacity>
+  );
+};
+
 
   // ========= 整个页面布局 =========
   return (
@@ -188,7 +223,7 @@ export default function HomeScreen() {
       {/* 顶部：问候 + Weather */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greetingText}>Hi, Carolyn.</Text>
+          <Text style={styles.greetingText}>Hi, {userName || "there"}.</Text>
           <Text style={styles.subGreeting}>Welcome to UniBrazzaar!</Text>
         </View>
         <View style={{ alignItems: "flex-end" }}>
@@ -203,8 +238,11 @@ export default function HomeScreen() {
           style={styles.searchInput}
           placeholder="Search for items..."
           placeholderTextColor="#c9c9c9"
+          value={searchQuery}              // ✅ 绑定输入框的值
+          onChangeText={setSearchQuery}    // ✅ 每次输入时更新 state
         />
       </View>
+
 
       {/* 分类 row：用图片 + 背景选中态 */}
       <View style={styles.categoryRow}>
