@@ -36,7 +36,7 @@ function PrimaryButton({
       disabled={disabled}
       activeOpacity={0.8}
       style={{
-        backgroundColor: disabled ? "#c9c9c9" : "#2f6fed",
+        backgroundColor: disabled ? "#c9c9c9" : "#FF7E3E",
         paddingVertical: 14,
         borderRadius: 10,
         alignItems: "center",

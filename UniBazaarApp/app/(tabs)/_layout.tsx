@@ -7,18 +7,22 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: true,
-        tabBarActiveTintColor: "#234594",
-        tabBarInactiveTintColor: "#9db2e5",
+        headerShown: false,
+        tabBarActiveTintColor: "#FF7E3E",
+        tabBarInactiveTintColor: "#FF7E3E",
       }}
     >
-      {/*  Home */}
+      {/* Home */}
       <Tabs.Screen
         name="home"
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" color={color} size={size} />
+          tabBarIcon: ({ color, size, focused }) => ( // 添加 focused 参数
+            <Ionicons
+              name={focused ? "home" : "home-outline"} // 根据 focused 状态切换图标
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -28,8 +32,12 @@ export default function TabLayout() {
         name="nearme"
         options={{
           title: "Near Me",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="location-outline" color={color} size={size} />
+          tabBarIcon: ({ color, size, focused }) => ( // 添加 focused 参数
+            <Ionicons
+              name={focused ? "location" : "location-outline"} // 根据 focused 状态切换图标
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -52,7 +60,7 @@ export default function TabLayout() {
                   width: 70,
                   height: 70,
                   borderRadius: 35,
-                  backgroundColor: "#234594",
+                  backgroundColor: "#FF7E3E",
                   justifyContent: "center",
                   alignItems: "center",
                   shadowColor: "#000",
@@ -68,24 +76,32 @@ export default function TabLayout() {
         }}
       />
 
-      {/*  Chat */}
+      {/* Chat */}
       <Tabs.Screen
         name="chat"
         options={{
           title: "Chat",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="chatbubble-outline" color={color} size={size} />
+          tabBarIcon: ({ color, size, focused }) => ( // 添加 focused 参数
+            <Ionicons
+              name={focused ? "chatbubbles" : "chatbubbles-outline"} // 使用复数形式通常更好看
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
 
-      {/*  Me */}
+      {/* Me (Profile) */}
       <Tabs.Screen
         name="profile"
         options={{
           title: "Me",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" color={color} size={size} />
+          tabBarIcon: ({ color, size, focused }) => ( // 添加 focused 参数
+            <Ionicons
+              name={focused ? "person" : "person-outline"} // 根据 focused 状态切换图标
+              color={color}
+              size={size}
+            />
           ),
         }}
       />

@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { db } from "../../firebase/firebaseConfig";
 import { collection, query, onSnapshot } from "firebase/firestore";
 import WeatherBanner from "../../components/WeatherBanner";
+import { useFavorites } from "../FavoritesContext"; // 修正了路径
 
 // 本地分类图片（记得把这些图片放到对应路径）
 const CATEGORIES = [
@@ -60,7 +61,7 @@ type Item = {
 export default function HomeScreen() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const { toggleFavorite, isFavorite } = useFavorites(); // 使用全局收藏夹
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   // ========= 连接 Firestore =========
@@ -85,25 +86,6 @@ export default function HomeScreen() {
 
     return () => unsub();
   }, []);
-
-  // ========= 收藏按钮：先存在本地，预留以后写入 profile =========
-  const toggleFavorite = (item: Item) => {
-    setFavorites((prev) => {
-      const isFav = prev.includes(item.id);
-      let newFavs: string[];
-
-      if (isFav) {
-        newFavs = prev.filter((id) => id !== item.id);
-      } else {
-        newFavs = [...prev, item.id];
-      }
-
-      // TODO: 在这里把 newFavs 写入 Firestore 的 user/profile 收藏
-      console.log("Current favorite IDs (local only):", newFavs);
-
-      return newFavs;
-    });
-  };
 
   // ========= Loading =========
   if (loading) {
@@ -146,7 +128,7 @@ export default function HomeScreen() {
 
   // ========= 渲染单个卡片 =========
   const renderItem = ({ item }: { item: Item }) => {
-    const isFavorite = favorites.includes(item.id);
+    const favorite = isFavorite(item.id);
     const distance = item.distanceKm ?? 0.5; // 临时假数据
 
     return (
@@ -173,9 +155,9 @@ export default function HomeScreen() {
               activeOpacity={0.8}
             >
               <Ionicons
-                name={isFavorite ? "heart" : "heart-outline"}
+                name={favorite ? "heart" : "heart-outline"}
                 size={22}
-                color={isFavorite ? "#ff4d4f" : "#ffffff"}
+                color={favorite ? "#FF7E3E" : "#ffffff"}
               />
             </TouchableOpacity>
           </View>
@@ -319,7 +301,7 @@ function CategoryButton({
 
 /* 样式 */
 const CARD_BG = "#ffffff";
-const PAGE_BG = "#ffffff";
+const PAGE_BG = "#F5F5F5";
 
 const styles = StyleSheet.create({
   container: {
@@ -361,7 +343,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     // backgroundColor: "#ffe4c6",
     borderWidth: 1,
-    borderColor: "#bebebeff",
+    borderColor: "#FE8A0D",
 
     borderRadius: 12,
     paddingHorizontal: 14,
@@ -494,7 +476,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#2f62ff",
+    color: "#FE8A0D",
     marginBottom: 6,
   },
   metaRow: {

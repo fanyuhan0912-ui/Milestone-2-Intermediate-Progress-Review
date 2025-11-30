@@ -105,7 +105,7 @@ export default function ChatScreen() {
         <View
           style={{
             maxWidth: "78%",
-            backgroundColor: mine ? "#2f6fed" : "#f0f1f5",
+            backgroundColor: mine ? "#FFC484" : "#f0f1f5",
             paddingVertical: 8,
             paddingHorizontal: 12,
             borderRadius: 14,
@@ -118,7 +118,7 @@ export default function ChatScreen() {
               {item.displayName || "Student"}
             </Text>
           )}
-          <Text style={{ color: mine ? "white" : "#111", fontSize: 15 }}>
+          <Text style={{ color: mine ? "#111" : "#111", fontSize: 15 }}>
             {item.text}
           </Text>
         </View>
@@ -179,7 +179,7 @@ export default function ChatScreen() {
           onPress={send}
           activeOpacity={0.8}
           style={{
-            backgroundColor: text.trim() ? "#2f6fed" : "#cbd3ff",
+            backgroundColor: text.trim() ? "#FE8A0D" : "#FFEEDB",
             paddingHorizontal: 16,
             paddingVertical: 10,
             borderRadius: 20,
