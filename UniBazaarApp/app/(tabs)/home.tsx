@@ -13,9 +13,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { db } from "../../firebase/firebaseConfig";
 import { collection, query, onSnapshot } from "firebase/firestore";
 import WeatherBanner from "../../components/WeatherBanner";
-import { useFavorites } from "../FavoritesContext"; // 修正了路径
+import { useFavorites } from "../FavoritesContext"; 
 import { auth } from "../../firebase/firebaseConfig";
 import { router } from "expo-router";
+import { Keyboard } from "react-native";
+
 
 // 本地分类图片（记得把这些图片放到对应路径）
 const CATEGORIES = [
@@ -148,6 +150,15 @@ const displayedItems = itemsByCategory.filter((item) => {
   return title.includes(q) || desc.includes(q);
 });
 
+const handleSearch = () => {
+  console.log("Searching for:", searchQuery);
+
+  // 🔥 不需要专门写逻辑，因为你已经用 searchQuery 过滤了
+  // 这里只是关闭键盘效果
+  Keyboard.dismiss();
+};
+
+
   // ========= 渲染单个卡片 =========
  const renderItem = ({ item }: { item: Item }) => {
   const favorite = isFavorite(item.id);
@@ -232,16 +243,25 @@ const displayedItems = itemsByCategory.filter((item) => {
       </View>
 
       {/* 搜索栏 */}
-      <View style={styles.searchBar}>
-        <Ionicons name="search" size={18} color="#999" />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search for items..."
-          placeholderTextColor="#c9c9c9"
-          value={searchQuery}              // ✅ 绑定输入框的值
-          onChangeText={setSearchQuery}    // ✅ 每次输入时更新 state
-        />
-      </View>
+     <View style={styles.searchBar}>
+  <Ionicons name="search" size={18} color="#999" />
+
+  <TextInput
+    style={styles.searchInput}
+    placeholder="Search for items..."
+    placeholderTextColor="#c9c9c9"
+    value={searchQuery}
+    onChangeText={setSearchQuery}
+    returnKeyType="search"          // ⬅️ 让键盘显示 "Search"
+    onSubmitEditing={handleSearch}  // ⬅️ 按 Return 时触发
+  />
+
+  {/* 右侧搜索按钮 */}
+  <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+    <Text style={styles.searchButtonText}>Go</Text>
+  </TouchableOpacity>
+</View>
+
 
 
       {/* 分类 row：用图片 + 背景选中态 */}
@@ -376,29 +396,39 @@ const styles = StyleSheet.create({
   },
 
   /* Search bar */
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    // backgroundColor: "#ffe4c6",
-    borderWidth: 1,
-    borderColor: "#FE8A0D",
 
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    marginBottom: 30,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-   
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 14,
-    color: "#333",
-  },
+searchButton: {
+  backgroundColor: "#FE8A0D",   // 你的橙色
+  paddingHorizontal: 30,
+  paddingVertical: 8,
+  borderRadius: 10,
+  marginLeft: 8,
+},
+
+searchButtonText: {
+  color: "#fff",
+  fontWeight: "600",
+  fontSize: 13,
+},
+
+searchBar: {
+  flexDirection: "row",
+  alignItems: "center",
+  borderWidth: 1,
+  borderColor: "#FE8A0D",
+  borderRadius: 12,
+  paddingLeft:12,
+  paddingRight:4,
+  paddingVertical: 4,
+  marginBottom: 30,
+},
+searchInput: {
+  flex: 1,
+  marginLeft: 8,
+  fontSize: 14,
+  color: "#333",
+},
+
 
   /* Categories row */
   categoryRow: {
@@ -414,8 +444,8 @@ const styles = StyleSheet.create({
   },
   categoryButtonActive: {},
   categoryIconWrapper: {
-    width: 60,
-    height: 60,
+    width: 38,
+    height: 38,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
@@ -425,8 +455,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#E3F0FF", 
   },
   categoryIcon: {
-    width: 50,
-    height: 50,
+    width: 38,
+    height: 38,
   },
   categoryLabel: {
     fontSize: 11,
