@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: PAGE_BG,
     paddingHorizontal: 16,
-    paddingTop: 40,
+    paddingTop: 45,
   },
 
   center: {
