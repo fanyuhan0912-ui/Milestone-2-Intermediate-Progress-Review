@@ -15,6 +15,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { auth, db } from "../../firebase/firebaseConfig";
 import { addDoc, collection } from "firebase/firestore";
 
+
 const DRAFT_KEY = "add_draft_v1";
 
 // category

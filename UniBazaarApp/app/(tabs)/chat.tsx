@@ -33,6 +33,8 @@ export default function ChatListScreen() {
   const currentUser = auth.currentUser;
   const userId = currentUser?.uid;
 
+  
+
   useEffect(() => {
     // 没登录就不查
     if (!userId) {
@@ -89,7 +91,14 @@ export default function ChatListScreen() {
   }
 
   return (
+
+    
+
+   
     <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Messages</Text>
+      </View>
       <FlatList
         data={chats}
         keyExtractor={(item) => item.id}
@@ -132,8 +141,19 @@ export default function ChatListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5", padding: 12 },
+  container: { flex: 1, backgroundColor: "#f5f5f5", paddingTop:60,paddingHorizontal: 12 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  header: {
+    paddingBottom: 20,
+    paddingLeft:5,
+  },
+
+headerText: {
+  fontSize: 22,
+  fontWeight: "700",
+  color: "#222",
+},
+
 
   chatCard: {
     borderRadius: 12,

@@ -452,7 +452,9 @@ searchInput: {
     marginBottom: 4,
   },
   categoryIconWrapperActive: {
-    backgroundColor: "#E3F0FF", 
+    backgroundColor: "#c0dbfaff", 
+    width:50,
+    height:50,
   },
   categoryIcon: {
     width: 38,
