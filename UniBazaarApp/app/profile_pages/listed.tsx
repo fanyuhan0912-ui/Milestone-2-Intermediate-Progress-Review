@@ -33,7 +33,7 @@ export default function ListedScreen() {
 
       try {
         // 创建一个查询，获取 'products' 集合中 'sellerId' 等于当前用户 UID 的所有商品
-        const q = query(collection(db, "products"), where("sellerId", "==", user.uid));
+        const q = query(collection(db, "items"), where("sellerId", "==", user.uid));
 
         const querySnapshot = await getDocs(q);
 
@@ -43,7 +43,7 @@ export default function ListedScreen() {
           const data = doc.data();
           products.push({
             id: doc.id,
-            name: data.name,
+            name: data.title,
             price: data.price,
             imageUrl: data.imageUrl, // 确保你的 Firestore 文档中有 imageUrl 字段
           });

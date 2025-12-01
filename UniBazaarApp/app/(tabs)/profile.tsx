@@ -6,10 +6,14 @@ import { signOut } from 'firebase/auth';
 import { router } from 'expo-router';
 
 export default function ProfileScreen() {
+
   const user = auth.currentUser;
-    const handleNavigation = (path: string) => {
-      router.push(path);
-    };
+
+  const userName = user?.displayName || "User";
+
+  const handleNavigation = (path: string) => {
+    router.push(path);
+  };
 
   const handleLogout = async () => {
     try {
@@ -29,22 +33,27 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.profileCard}>
-        <Image source={require('../../assets/images/chair.png')} style={styles.avatar} />
-        <View style={styles.profileInfo}>
-          <Text style={styles.profileName}>Carolyn Fan</Text>
-          <View style={styles.ratingContainer}>
-            <Ionicons name="star" size={16} color="#FE8A0D" />
-            <Ionicons name="star" size={16} color="#FE8A0D" />
-            <Ionicons name="star" size={16} color="#FE8A0D" />
-            <Ionicons name="star" size={16} color="#FE8A0D" />
-            <Ionicons name="star-half" size={16} color="#FE8A0D" />
-          </View>
-        </View>
-        <TouchableOpacity>
-          <Text style={styles.reviewsText}>4 Reviews</Text>
+        <TouchableOpacity 
+            activeOpacity={0.8}
+            onPress={() => handleNavigation('profile_pages/userHomepage')}
+        >
+            <View style={styles.profileCard}>
+                <Image source={require('../../assets/images/chair.png')} style={styles.avatar} />
+                <View style={styles.profileInfo}>
+                    <Text style={styles.profileName}>{userName}</Text>
+                    <View style={styles.ratingContainer}>
+                        <Ionicons name="star" size={16} color="#FE8A0D" />
+                        <Ionicons name="star" size={16} color="#FE8A0D" />
+                        <Ionicons name="star" size={16} color="#FE8A0D" />
+                        <Ionicons name="star" size={16} color="#FE8A0D" />
+                        <Ionicons name="star-half" size={16} color="#FE8A0D" />
+                    </View>
+                </View>
+                <TouchableOpacity>
+                    <Ionicons name ="chevron-forward-outline" size={24} color="#C7C7CC" style={{ marginLeft: 8 }} />
+                </TouchableOpacity>
+            </View>
         </TouchableOpacity>
-      </View>
 
 <View style={styles.section}>
         <Text style={styles.sectionTitle}>Buying</Text>
@@ -52,10 +61,7 @@ export default function ProfileScreen() {
           <View style={styles.iconContainer}>
             <TouchableOpacity
               style={styles.iconButton}
-              onPress={() => handleNavigation('/profile_pages/favourite')}>
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>1</Text>
-              </View>
+              onPress={() => handleNavigation('profile_pages/favourite')}>
               <Ionicons name="heart-outline" size={28} color="#FF7E3E" />
             </TouchableOpacity>
             <Text style={styles.iconLabel}>Favourite</Text>
@@ -63,7 +69,7 @@ export default function ProfileScreen() {
           <View style={styles.iconContainer}>
             <TouchableOpacity
               style={styles.iconButton}
-              onPress={() => handleNavigation('/profile_pages/purchased')}>
+              onPress={() => handleNavigation('profile_pages/purchased')}>
               <Ionicons name="cart-outline" size={28} color="#FF7E3E" />
             </TouchableOpacity>
             <Text style={styles.iconLabel}>Purchased</Text>
@@ -71,7 +77,7 @@ export default function ProfileScreen() {
           <View style={styles.iconContainer}>
             <TouchableOpacity
               style={styles.iconButton}
-              onPress={() => handleNavigation('/profile_pages/toReview')}>
+              onPress={() => handleNavigation('profile_pages/toReview')}>
               <Ionicons name="chatbox-outline" size={28} color="#FF7E3E" />
             </TouchableOpacity>
             <Text style={styles.iconLabel}>To Review</Text>
@@ -85,10 +91,7 @@ export default function ProfileScreen() {
           <View style={styles.iconContainer}>
             <TouchableOpacity 
               style={styles.iconButton}
-              onPress={() => handleNavigation('/profile_pages/sold')}>
-                 <View style={styles.badge}>
-                    <Text style={styles.badgeText}>1</Text>
-                 </View>
+              onPress={() => handleNavigation('profile_pages/sold')}>
               <Ionicons name="pricetag-outline" size={28} color="#FF7E3E" />
             </TouchableOpacity>
             <Text style={styles.iconLabel}>Sold</Text>
@@ -96,10 +99,7 @@ export default function ProfileScreen() {
           <View style={styles.iconContainer}>
             <TouchableOpacity 
               style={styles.iconButton}
-              onPress={() => handleNavigation('/profile_pages/listed')}>
-                <View style={styles.badge}>
-                    <Text style={styles.badgeText}>1</Text>
-                </View>
+              onPress={() => handleNavigation('profile_pages/listed')}>
               <Ionicons name="cube-outline" size={28} color="#FF7E3E" />
             </TouchableOpacity>
             <Text style={styles.iconLabel}>Listed</Text>
@@ -107,7 +107,7 @@ export default function ProfileScreen() {
           <View style={styles.iconContainer}>
             <TouchableOpacity 
               style={styles.iconButton}
-              onPress={() => handleNavigation('/profile_pages/viewMore')}>
+              onPress={() => handleNavigation('profile_pages/viewMore')}>
               <Ionicons name="grid-outline" size={28} color="#FF7E3E" />
             </TouchableOpacity>
             <Text style={styles.iconLabel}>View more</Text>

@@ -15,14 +15,9 @@ export default function RootLayout() {
             <Stack.Screen name="welcome" options={{ headerShown: false }} />
             <Stack.Screen name="login" />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="(profile_pages)" options={{ headerShown: false }} />
-         <Stack.Screen
-        name="item/[id]"
-        options={{ title: "Item Detail" }}  // 想写成 "Product" 也可以
-      />
+            <Stack.Screen name="profile_pages" options={{ headerShown: false }} />
+            <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
         </Stack>
-
-
         <StatusBar style="auto" />
         </ThemeProvider>
     </FavoritesProvider>

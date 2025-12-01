@@ -10,8 +10,9 @@ import {
   ScrollView,
 } from "react-native";
 import { router } from "expo-router";
-import { auth } from "../firebase/firebaseConfig";
+import { auth, db } from "../firebase/firebaseConfig";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";   // ⭐ 必须加这个
 
 export default function SignUpScreen() {
   const [fullName, setFullName] = useState("");
@@ -26,7 +27,7 @@ export default function SignUpScreen() {
     }
 
     try {
-      // 1. Create account in Firebase Auth
+      // 1. Create user in Auth
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -34,13 +35,18 @@ export default function SignUpScreen() {
       );
       const user = userCredential.user;
 
-      // 2. Save display name in Firebase Auth profile (optional but nice)
+      // 2. Save fullName to Firebase Auth (optional)
       await updateProfile(user, {
         displayName: fullName,
       });
 
-      // ⚠ 如果你之后想保存 schoolName，需要另外在 Firestore 里建表
-      // 这里只做演示，不再额外写 Firestore 逻辑
+      // ⭐⭐⭐ 3. Save user data in Firestore (THIS IS THE FIX!) ⭐⭐⭐
+      await setDoc(doc(db, "users", user.uid), {
+        fullName: fullName,
+        university: schoolName,
+        email: email,
+        createdAt: new Date(),
+      });
 
       Alert.alert("Account created", "Welcome to UniBazaar!", [
         {
@@ -63,10 +69,7 @@ export default function SignUpScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Top illustration (same style as your login page girl / avatar) */}
       <View style={styles.illustrationWrapper}>
-        {/* TODO: replace with your own image */}
-        {/* e.g. put signupGirl.png in app/image and change the path below */}
         <Image
           source={require("./image/loginImg2.png")}
           style={styles.illustration}
@@ -74,7 +77,6 @@ export default function SignUpScreen() {
         />
       </View>
 
-      {/* White card */}
       <View style={styles.card}>
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -129,12 +131,10 @@ export default function SignUpScreen() {
             />
           </View>
 
-          {/* Sign up button */}
           <TouchableOpacity style={styles.button} onPress={handleSignUp}>
             <Text style={styles.buttonText}>Sign Up</Text>
           </TouchableOpacity>
 
-          {/* Already have account */}
           <View style={styles.bottomRow}>
             <Text style={styles.bottomText}>Already have an account?</Text>
             <TouchableOpacity onPress={() => router.push("/login")}>
@@ -146,96 +146,3 @@ export default function SignUpScreen() {
     </View>
   );
 }
-
-const THEME_BLUE = "#18458F";   // close to your screenshot
-const THEME_ORANGE = "#FF9F2E"; // button & border color
-const CARD_BG = "#FFF7EC";      // slightly warm white like your login card
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: THEME_BLUE,
-    alignItems: "center",
-    justifyContent: "flex-start",
-  },
-
-  illustrationWrapper: {
-    marginTop: 40,
-    alignItems: "center",
-  },
-  illustration: {
-    width: 150,
-    height: 150,
-  },
-
-  card: {
-    width: "90%",
-    backgroundColor: CARD_BG,
-    borderRadius: 28,
-    paddingHorizontal: 22,
-    paddingTop: 24,
-    paddingBottom: 18,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
-    elevation: 5,
-    flexGrow: 1,
-  },
-
-  title: {
-    fontSize: 20,
-    fontWeight: "700",
-    textAlign: "center",
-    marginBottom: 20,
-    color: "#333",
-  },
-
-  inputGroup: {
-    marginBottom: 14,
-  },
-  label: {
-    fontSize: 13,
-    color: THEME_ORANGE,
-    marginBottom: 6,
-  },
-  input: {
-    height: 46,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: THEME_ORANGE,
-    backgroundColor: "#FFF",
-    paddingHorizontal: 12,
-    fontSize: 14,
-  },
-
-  button: {
-    marginTop: 12,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: THEME_ORANGE,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-
-  bottomRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 16,
-  },
-  bottomText: {
-    fontSize: 13,
-    color: "#999",
-    marginRight: 4,
-  },
-  bottomLink: {
-    fontSize: 13,
-    color: THEME_ORANGE,
-    fontWeight: "600",
-  },
-});
