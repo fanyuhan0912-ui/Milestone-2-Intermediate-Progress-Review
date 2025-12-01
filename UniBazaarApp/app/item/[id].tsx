@@ -71,19 +71,21 @@ export default function ItemDetailScreen() {
           setItem(fetchedItem);
 
           // B. 根据商品中的 sellerId 获取卖家信息
-          const sellerDocRef = doc(db, "users", fetchedItem.sellerId);
+// B. 根据商品中的 sellerId 获取卖家信息
+          const sellerDocRef = doc(db, "presence", fetchedItem.sellerId);
           const sellerDocSnap = await getDoc(sellerDocRef);
 
           if (sellerDocSnap.exists()) {
             const sellerData = sellerDocSnap.data();
             setSeller({
               uid: sellerDocSnap.id,
-              fullName: sellerData.fullName || "UniBazaar User",
+              fullName: sellerData.displayName || "UniBazaar User",
               avatarUrl: sellerData.avatarUrl || null,
             });
           } else {
             setSeller({ uid: fetchedItem.sellerId, fullName: "UniBazaar User" });
           }
+
         }
       } catch (error) {
         console.error("Error fetching item details:", error);
