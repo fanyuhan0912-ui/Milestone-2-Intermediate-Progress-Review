@@ -94,14 +94,14 @@ export default function LoginScreen() {
         </TouchableOpacity>
 
         {/* Bottom text */}
-        <View style={styles.bottomRow}>
-          <TouchableOpacity>
-            <Text style={styles.bottomLink}>Need help?</Text>
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Text style={styles.bottomLink}>Forgot password?</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.bottomRow}>
+        <Text style={styles.bottomText}>Don't have an account? </Text>
+
+        <TouchableOpacity onPress={() => router.push("/signup")}>
+          <Text style={styles.signUpLink}>Sign up</Text>
+        </TouchableOpacity>
+      </View>
+
 
       
       </View>
@@ -109,16 +109,35 @@ export default function LoginScreen() {
   );
 }
 
-const THEME_YELLOW = "#234594";
+const THEME_BLUE = "#234594";
 const THEME_ORANGE = "#fe8a0e";
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: THEME_YELLOW,
+    backgroundColor: THEME_BLUE,
     justifyContent: "center",
     alignItems: "center",
   },
+  //bottom button
+    bottomRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 16,
+  },
+
+  bottomText: {
+    fontSize: 14,
+    color: "#4B5563",
+  },
+
+  signUpLink: {
+    fontSize: 14,
+    color: "#2f6fed",   // 蓝色
+    textDecorationLine: "underline",
+    fontWeight: "600",
+  },
+
 
   /* Owl / Logo */
   logoWrapper: {
@@ -136,7 +155,7 @@ const styles = StyleSheet.create({
   /* White Box */
   card: {
     width: "88%",
-    backgroundColor: "#FFF8F0",
+    backgroundColor: "#fff",
     borderRadius: 24,
     paddingHorizontal: 24,
     paddingTop: 70,
@@ -160,18 +179,19 @@ const styles = StyleSheet.create({
   inputGroup: {
     marginBottom: 16,
   },
+
   inputLabel: {
-    fontSize: 13,
-    color: "#fe8a0e",
-    marginBottom: 6,
+    fontSize: 14,
+    color: "#4B5563",
+    marginBottom: 4,
   },
   input: {
-    height: 46,
-    borderRadius: 8,
+    height: 44,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#fe8a0e",
-    paddingHorizontal: 12,
-    backgroundColor: "#FFF8F0",
+    borderColor: "#E5E7EB",
+    paddingHorizontal: 10,
+    backgroundColor: "#F9FAFB",
   },
 
   loginButton: {
