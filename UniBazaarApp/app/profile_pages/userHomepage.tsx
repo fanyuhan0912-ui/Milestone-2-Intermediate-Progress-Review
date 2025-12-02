@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { setDoc } from "firebase/firestore";
 import {
   View,
   Text,
@@ -21,6 +20,10 @@ import {
   query,
   where,
   getDocs,
+  setDoc,
+  updateDoc,
+  addDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { db, auth } from "../../firebase/firebaseConfig";
 
@@ -35,7 +38,8 @@ export default function UserHomepageScreen() {
   const user = auth.currentUser;
   const params = useLocalSearchParams();
   const profileUid = params.uid as string | undefined;
-  const viewingUid = profileUid ?? auth.currentUser?.uid;
+  // 如果有传 uid，就看别人的主页；否则看自己的
+  const viewingUid = profileUid ?? user?.uid ?? null;
 
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [avatarKey, setAvatarKey] = useState<string>("avatar1");
@@ -48,6 +52,7 @@ export default function UserHomepageScreen() {
     avatar3: require("../../assets/images/user3.png"),
   };
 
+  /** 选图 */
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -59,6 +64,7 @@ export default function UserHomepageScreen() {
     return null;
   };
 
+  /** 上传图片到 Storage，返回下载 URL */
   const uploadToStorage = async (uri: string, path: string) => {
     const storage = getStorage();
     const blob: Blob = await new Promise((resolve, reject) => {
@@ -75,7 +81,7 @@ export default function UserHomepageScreen() {
     return await getDownloadURL(storageRef);
   };
 
-  // Load profile data
+  /** 加载用户资料 */
   useEffect(() => {
     const fetchUserData = async () => {
       if (!viewingUid) return;
@@ -85,15 +91,15 @@ export default function UserHomepageScreen() {
 
       let finalName = "User";
       let university = "Simon Fraser University";
-      let avatarUrl = null;
-      let backgroundUrl = null;
+      let avatarUrl: string | null = null;
+      let backgroundUrl: string | null = null;
 
       if (userSnap.exists()) {
         const data = userSnap.data();
-        finalName = data.fullName || finalName;
-        university = data.university || university;
-        avatarUrl = data.avatarUrl || null;
-        backgroundUrl = data.backgroundUrl || null;
+        finalName = (data.fullName as string) || finalName;
+        university = (data.university as string) || university;
+        avatarUrl = (data.avatarUrl as string) || null;
+        backgroundUrl = (data.backgroundUrl as string) || null;
       }
 
       const presenceRef = doc(db, "presence", viewingUid);
@@ -105,30 +111,69 @@ export default function UserHomepageScreen() {
         if (pData.avatarKey) setAvatarKey(pData.avatarKey);
       }
 
-      setUserProfile({ fullName: finalName, university, avatarUrl, backgroundUrl });
+      setUserProfile({
+        fullName: finalName,
+        university,
+        avatarUrl,
+        backgroundUrl,
+      });
       setLoading(false);
     };
 
     fetchUserData();
   }, [viewingUid]);
 
-  // Load user items
+  /** 加载该用户的所有商品（不区分 active / sold） */
   useEffect(() => {
     const fetchListedItems = async () => {
-      if (!user) return;
+      if (!viewingUid) return;
 
-      const q = query(collection(db, "items"), where("sellerId", "==", viewingUid));
+      const q = query(
+        collection(db, "items"),
+        where("sellerId", "==", viewingUid)
+      );
       const snap = await getDocs(q);
 
-      const items = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       setListedItems(items);
     };
 
     fetchListedItems();
   }, [viewingUid]);
 
+  /** 进入商品详情 */
   const openDetail = (id: string) => {
     router.push(`/item/${id}`);
+  };
+
+  /** 点击 Sold：标记为已售出 + 记到 users/{uid}/sold */
+  const handleMarkAsSold = async (item: any) => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+
+    try {
+      // 1. 更新 items 里的状态
+      await updateDoc(doc(db, "items", item.id), {
+        status: "sold",
+        soldAt: serverTimestamp(),
+        soldBy: currentUser.uid,
+      });
+
+      // 2. 写入 users/{uid}/sold 子集合（给 Sold 页面用）
+      await addDoc(collection(db, "users", currentUser.uid, "sold"), {
+        itemId: item.id,
+        completedAt: serverTimestamp(),
+      });
+
+      // 3. 本地 state 更新，给这一条打上 sold 状态
+      setListedItems((prev) =>
+        prev.map((it) =>
+          it.id === item.id ? { ...it, status: "sold" } : it
+        )
+      );
+    } catch (e) {
+      console.log("mark as sold error:", e);
+    }
   };
 
   if (loading)
@@ -150,27 +195,48 @@ export default function UserHomepageScreen() {
       ? AVATAR_MAP[avatarKey]
       : require("../../assets/images/user1.png");
 
+  const isOwnProfile = viewingUid === user?.uid;
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
+        {/* 顶部返回 */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
         </View>
 
+        {/* 头像与背景 */}
         <View style={styles.profileHeader}>
           <TouchableOpacity
+            disabled={!isOwnProfile}
             onPress={async () => {
-              if (!user) return;
+              if (!isOwnProfile || !user) return;
               const uri = await pickImage();
               if (!uri) return;
-              const downloadURL = await uploadToStorage(uri, `users/${user.uid}/background.jpg`);
-              await setDoc(doc(db, "users", user.uid), { backgroundUrl: downloadURL }, { merge: true });
-              setUserProfile((prev) => ({ ...prev!, backgroundUrl: downloadURL }));
+              const downloadURL = await uploadToStorage(
+                uri,
+                `users/${user.uid}/background.jpg`
+              );
+              await setDoc(
+                doc(db, "users", user.uid),
+                { backgroundUrl: downloadURL },
+                { merge: true }
+              );
+              setUserProfile((prev) => ({
+                ...prev!,
+                backgroundUrl: downloadURL,
+              }));
             }}
           >
-            <Image source={avatarSource} style={styles.backgroundImage} blurRadius={10} />
+            <Image
+              source={userProfile.backgroundUrl
+                ? { uri: userProfile.backgroundUrl }
+                : avatarSource}
+              style={styles.backgroundImage}
+              blurRadius={userProfile.backgroundUrl ? 0 : 10}
+            />
           </TouchableOpacity>
 
           <View style={styles.profileInfoContainer}>
@@ -186,20 +252,45 @@ export default function UserHomepageScreen() {
           </View>
         </View>
 
-       
+        {/* 商品列表 */}
         <View style={styles.itemsContainer}>
           {listedItems.length === 0 ? (
             <Text style={styles.noItems}>No items listed yet.</Text>
           ) : (
-            listedItems.map((item) => (
-              <TouchableOpacity key={item.id} style={styles.itemCard} onPress={() => openDetail(item.id)}>
-                <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.itemName}>{item.title}</Text>
-                  <Text style={styles.itemPrice}>${item.price}</Text>
+            listedItems.map((item) => {
+              const isSold = item.status === "sold";
+              return (
+                <View key={item.id} style={styles.itemCard}>
+                  <TouchableOpacity
+                    style={{ flexDirection: "row", flex: 1 }}
+                    onPress={() => openDetail(item.id)}
+                  >
+                    <Image
+                      source={{ uri: item.imageUrl }}
+                      style={styles.itemImage}
+                    />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.itemName}>{item.title}</Text>
+                      <Text style={styles.itemPrice}>${item.price}</Text>
+
+                      {isSold && (
+                        <Text style={styles.soldTag}>Sold</Text>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+
+                  {/* 只有自己看自己的主页时，才显示 Sold 按钮 */}
+                  {isOwnProfile && !isSold && (
+                    <TouchableOpacity
+                      style={styles.soldButton}
+                      onPress={() => handleMarkAsSold(item)}
+                    >
+                      <Text style={styles.soldButtonText}>Sold</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
-              </TouchableOpacity>
-            ))
+              );
+            })
           )}
         </View>
       </ScrollView>
@@ -207,13 +298,13 @@ export default function UserHomepageScreen() {
   );
 }
 
-
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
+
   header: { paddingHorizontal: 15, paddingVertical: 10 },
 
   profileHeader: { marginBottom: 10 },
+
   backgroundImage: { width: "100%", height: 200 },
 
   profileInfoContainer: {
@@ -258,8 +349,29 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     marginBottom: 15,
+    alignItems: "center",
   },
   itemImage: { width: 70, height: 70, borderRadius: 8, marginRight: 12 },
   itemName: { fontSize: 16, fontWeight: "600" },
   itemPrice: { color: "#FF7E3E", marginTop: 4 },
+
+  soldTag: {
+    marginTop: 4,
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#888",
+  },
+
+  soldButton: {
+    backgroundColor: "#FF7E3E",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignSelf: "center",
+    marginLeft: 8,
+  },
+  soldButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
 });

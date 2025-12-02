@@ -1,3 +1,4 @@
+// app/(tabs)/home.tsx
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -8,18 +9,15 @@ import {
   TouchableOpacity,
   TextInput,
   StyleSheet,
+  Keyboard,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { db } from "../../firebase/firebaseConfig";
+import { db, auth } from "../../firebase/firebaseConfig";
 import { collection, query, onSnapshot } from "firebase/firestore";
 import WeatherBanner from "../../components/WeatherBanner";
-import { useFavorites } from "../FavoritesContext"; 
-import { auth } from "../../firebase/firebaseConfig";
+import { useFavorites } from "../FavoritesContext";
 import { router } from "expo-router";
-import { Keyboard } from "react-native";
 
-
-// 本地分类图片（记得把这些图片放到对应路径）
 const CATEGORIES = [
   {
     key: "all",
@@ -48,7 +46,6 @@ const CATEGORIES = [
   },
 ];
 
-
 type Item = {
   id: string;
   title?: string;
@@ -59,6 +56,7 @@ type Item = {
   createdAt?: number;
   distanceKm?: number;
   category?: string;
+  status?: string; // 🔴 新增：active / sold
 };
 
 export default function HomeScreen() {
@@ -69,8 +67,7 @@ export default function HomeScreen() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-
- //  Firebase Auth.displayName）
+  // 读取 Firebase Auth 显示用户名
   useEffect(() => {
     const user = auth.currentUser;
     if (user) {
@@ -78,7 +75,7 @@ export default function HomeScreen() {
     }
   }, []);
 
-  // connect Firestore
+  // 监听 Firestore items 列表
   useEffect(() => {
     const q = query(collection(db, "items"));
 
@@ -101,7 +98,7 @@ export default function HomeScreen() {
     return () => unsub();
   }, []);
 
-  // Loading
+  // Loading 时
   if (loading) {
     return (
       <View style={styles.center}>
@@ -111,7 +108,7 @@ export default function HomeScreen() {
     );
   }
 
-  // no item
+  // 数据库里一个 item 都没有（包括 sold）
   if (!items.length) {
     return (
       <View style={styles.center}>
@@ -125,109 +122,111 @@ export default function HomeScreen() {
     );
   }
 
-const currentCategoryLabel =
-  CATEGORIES.find((c) => c.key === selectedCategory)?.label || "All Items";
+  // ====== 这里开始做筛选逻辑 ======
 
-// filter selcet
-const itemsByCategory =
-  selectedCategory === "all"
-    ? items
-    : items.filter(
-        (item) =>
-          (item.category || "").toLowerCase() ===
-          selectedCategory.toLowerCase()
-      );
+  const currentCategoryLabel =
+    CATEGORIES.find((c) => c.key === selectedCategory)?.label || "All Items";
 
-// filter
-const displayedItems = itemsByCategory.filter((item) => {
-  const q = searchQuery.trim().toLowerCase();
-  if (!q) return true;
+  // 先把 status === "sold" 的过滤掉（只显示没卖掉的）
+  const activeItems = items.filter((item) => item.status !== "sold");
 
-  const title = (item.title || "").toLowerCase();
-  const desc = (item.description || "").toLowerCase();
+  // 分类筛选
+  const itemsByCategory =
+    selectedCategory === "all"
+      ? activeItems
+      : activeItems.filter(
+          (item) =>
+            (item.category || "").toLowerCase() ===
+            selectedCategory.toLowerCase()
+        );
 
-  return title.includes(q) || desc.includes(q);
-});
+  // 搜索筛选
+  const displayedItems = itemsByCategory.filter((item) => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return true;
 
-const handleSearch = () => {
-  console.log("Searching for:", searchQuery);
-  Keyboard.dismiss();
-};
+    const title = (item.title || "").toLowerCase();
+    const desc = (item.description || "").toLowerCase();
 
+    return title.includes(q) || desc.includes(q);
+  });
 
-  // render part
- const renderItem = ({ item }: { item: Item }) => {
-  const favorite = isFavorite(item.id);
-  const distance = item.distanceKm ?? 0.5; //mock
-
-  // click card jump to item
-  const handleOpenDetail = () => {
-    router.push({
-      pathname: "/item/[id]",
-      params: { id: item.id },
-    });
+  const handleSearch = () => {
+    console.log("Searching for:", searchQuery);
+    Keyboard.dismiss();
   };
 
-  return (
-    <TouchableOpacity
-      style={styles.shadowWrapper}
-      activeOpacity={0.9}
-      onPress={handleOpenDetail}
-    >
-      <View style={styles.card}>
-        {/* pics*/}
-        <View style={styles.imageWrapper}>
-          {item.imageUrl ? (
-            <Image
-              source={{ uri: item.imageUrl }}
-              style={styles.cardImage}
-              resizeMode="cover"
-            />
-          ) : (
-            <View style={[styles.cardImage, styles.noImageBox]}>
-              <Text style={styles.noImageText}>No Image</Text>
+  // 渲染单个卡片
+  const renderItem = ({ item }: { item: Item }) => {
+    const favorite = isFavorite(item.id);
+    const distance = item.distanceKm ?? 0.5; // mock 距离
+
+    const handleOpenDetail = () => {
+      router.push({
+        pathname: "/item/[id]",
+        params: { id: item.id },
+      });
+    };
+
+    return (
+      <TouchableOpacity
+        style={styles.shadowWrapper}
+        activeOpacity={0.9}
+        onPress={handleOpenDetail}
+      >
+        <View style={styles.card}>
+          {/* 图片区域 */}
+          <View style={styles.imageWrapper}>
+            {item.imageUrl ? (
+              <Image
+                source={{ uri: item.imageUrl }}
+                style={styles.cardImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={[styles.cardImage, styles.noImageBox]}>
+                <Text style={styles.noImageText}>No Image</Text>
+              </View>
+            )}
+
+            {/* 收藏按钮 */}
+            <TouchableOpacity
+              style={styles.heartButton}
+              onPress={() => toggleFavorite(item)}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name={favorite ? "heart" : "heart-outline"}
+                size={22}
+                color={favorite ? "#FF7E3E" : "#ffffff"}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* 文本区域 */}
+          <View style={styles.cardBody}>
+            <Text style={styles.cardTitle} numberOfLines={1}>
+              {item.title || "(Untitled)"}
+            </Text>
+
+            {typeof item.price === "number" && (
+              <Text style={styles.price}>${item.price}</Text>
+            )}
+
+            <View style={styles.metaRow}>
+              <Ionicons name="location-sharp" size={14} color="#9ca3af" />
+              <Text style={styles.metaText}>{distance} km</Text>
             </View>
-          )}
-
-          {/* heart */}
-          <TouchableOpacity
-            style={styles.heartButton}
-            onPress={() => toggleFavorite(item)}
-            activeOpacity={0.8}
-          >
-            <Ionicons
-              name={favorite ? "heart" : "heart-outline"}
-              size={22}
-              color={favorite ? "#FF7E3E" : "#ffffff"}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* text */}
-        <View style={styles.cardBody}>
-          <Text style={styles.cardTitle} numberOfLines={1}>
-            {item.title || "(Untitled)"}
-          </Text>
-
-          {typeof item.price === "number" && (
-            <Text style={styles.price}>${item.price}</Text>
-          )}
-
-          <View style={styles.metaRow}>
-            <Ionicons name="location-sharp" size={14} color="#9ca3af" />
-            <Text style={styles.metaText}>{distance} km</Text>
           </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
-};
+      </TouchableOpacity>
+    );
+  };
 
-
-  // page layout
+  // ====== 页面整体布局 ======
   return (
     <View style={styles.container}>
-      {/* hi + Weather */}
+      {/* 顶部欢迎 + 天气 */}
       <View style={styles.header}>
         <View>
           <Text style={styles.greetingText}>Hi, {userName || "there"}.</Text>
@@ -238,28 +237,26 @@ const handleSearch = () => {
         </View>
       </View>
 
-      {/* search */}
-     <View style={styles.searchBar}>
-  <Ionicons name="search" size={18} color="#999" />
+      {/* 搜索栏 */}
+      <View style={styles.searchBar}>
+        <Ionicons name="search" size={18} color="#999" />
 
-  <TextInput
-    style={styles.searchInput}
-    placeholder="Search for items..."
-    placeholderTextColor="#c9c9c9"
-    value={searchQuery}
-    onChangeText={setSearchQuery}
-    returnKeyType="search"
-    onSubmitEditing={handleSearch}
-  />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search for items..."
+          placeholderTextColor="#c9c9c9"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          returnKeyType="search"
+          onSubmitEditing={handleSearch}
+        />
 
+        <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+          <Text style={styles.searchButtonText}>Go</Text>
+        </TouchableOpacity>
+      </View>
 
-  <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-    <Text style={styles.searchButtonText}>Go</Text>
-  </TouchableOpacity>
-</View>
-
-
-
+      {/* 分类按钮 */}
       <View style={styles.categoryRow}>
         {CATEGORIES.map((cat) => (
           <CategoryButton
@@ -272,7 +269,7 @@ const handleSearch = () => {
         ))}
       </View>
 
-
+      {/* section 标题 */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>{currentCategoryLabel}</Text>
         <Text style={styles.sectionCount}>
@@ -280,33 +277,30 @@ const handleSearch = () => {
         </Text>
       </View>
 
-  
- 
-        {displayedItems.length === 0 ? (
-          <View style={styles.emptyInCategory}>
-            <Text style={styles.emptyInCategoryTitle}>
-              No items in {currentCategoryLabel}.
-            </Text>
-            <Text style={styles.emptyInCategoryText}>
-              Try posting a new item in this category.
-            </Text>
-          </View>
-        ) : (
-          <FlatList
-            data={displayedItems}
-            keyExtractor={(it) => it.id}
-            renderItem={renderItem}
-            numColumns={2}
-            columnWrapperStyle={{ justifyContent: "space-between" }}
-            contentContainerStyle={{ paddingBottom: 100 }}
-            showsVerticalScrollIndicator={false}
-          />
-        )}
-      </View>
-
+      {/* 列表 / 空状态 */}
+      {displayedItems.length === 0 ? (
+        <View style={styles.emptyInCategory}>
+          <Text style={styles.emptyInCategoryTitle}>
+            No items in {currentCategoryLabel}.
+          </Text>
+          <Text style={styles.emptyInCategoryText}>
+            Try posting a new item in this category.
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={displayedItems}
+          keyExtractor={(it) => it.id}
+          renderItem={renderItem}
+          numColumns={2}
+          columnWrapperStyle={{ justifyContent: "space-between" }}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+    </View>
   );
 }
-
 
 function CategoryButton({
   label,
@@ -321,10 +315,7 @@ function CategoryButton({
 }) {
   return (
     <TouchableOpacity
-      style={[
-        styles.categoryButton,
-        active && styles.categoryButtonActive,
-      ]}
+      style={[styles.categoryButton, active && styles.categoryButtonActive]}
       activeOpacity={0.8}
       onPress={onPress}
     >
@@ -334,11 +325,7 @@ function CategoryButton({
           active && styles.categoryIconWrapperActive,
         ]}
       >
-        <Image
-          source={image}
-          style={styles.categoryIcon}
-          resizeMode="contain"
-        />
+        <Image source={image} style={styles.categoryIcon} resizeMode="contain" />
       </View>
       <Text
         style={[
@@ -352,16 +339,16 @@ function CategoryButton({
   );
 }
 
-/* style */
+/* styles */
 const CARD_BG = "#ffffff";
 const PAGE_BG = "#F5F5F5";
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: PAGE_BG,
     paddingHorizontal: 16,
     paddingTop: 60,
-
   },
 
   center: {
@@ -389,42 +376,38 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  /* Search bar */
+  // Search bar
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#FE8A0D",
+    borderRadius: 12,
+    paddingLeft: 12,
+    paddingRight: 4,
+    paddingVertical: 4,
+    marginBottom: 30,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 14,
+    color: "#333",
+  },
+  searchButton: {
+    backgroundColor: "#FE8A0D",
+    paddingHorizontal: 30,
+    paddingVertical: 8,
+    borderRadius: 10,
+    marginLeft: 8,
+  },
+  searchButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 13,
+  },
 
-searchButton: {
-  backgroundColor: "#FE8A0D",
-  paddingHorizontal: 30,
-  paddingVertical: 8,
-  borderRadius: 10,
-  marginLeft: 8,
-},
-
-searchButtonText: {
-  color: "#fff",
-  fontWeight: "600",
-  fontSize: 13,
-},
-
-searchBar: {
-  flexDirection: "row",
-  alignItems: "center",
-  borderWidth: 1,
-  borderColor: "#FE8A0D",
-  borderRadius: 12,
-  paddingLeft:12,
-  paddingRight:4,
-  paddingVertical: 4,
-  marginBottom: 30,
-},
-searchInput: {
-  flex: 1,
-  marginLeft: 8,
-  fontSize: 14,
-  color: "#333",
-},
-
-
-  /* Categories row */
+  // Categories
   categoryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -446,9 +429,9 @@ searchInput: {
     marginBottom: 4,
   },
   categoryIconWrapperActive: {
-    backgroundColor: "#c0dbfaff", 
-    width:50,
-    height:50,
+    backgroundColor: "#c0dbfa",
+    width: 50,
+    height: 50,
   },
   categoryIcon: {
     width: 38,
@@ -463,7 +446,6 @@ searchInput: {
     fontWeight: "600",
   },
 
-  
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -480,13 +462,9 @@ searchInput: {
     color: "#9ca3af",
   },
 
-
-
   shadowWrapper: {
     width: "48%",
     marginBottom: 14,
-
-
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
