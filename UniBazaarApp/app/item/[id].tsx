@@ -45,6 +45,8 @@ interface Seller {
   uid: string;
   fullName: string;
   avatarUrl?: string | null;
+  avatarKey?: string | null;
+
 }
 
 const { width } = Dimensions.get("window");
@@ -59,6 +61,18 @@ export default function ItemDetailScreen() {
   // ⭐ 收藏状态（来自 FavoritesContext）
   const { favorites, toggleFavorite, isFavorite } = useFavorites();
   const isFav = item ? isFavorite(item.id) : false;
+
+  const AVATAR_MAP: Record<string, any> = {
+  avatar1: require("../../assets/images/user1.png"),
+  avatar2: require("../../assets/images/user2.png"),
+  avatar3: require("../../assets/images/user3.png"),
+};
+  const sellerAvatarSource =
+    seller?.avatarKey && AVATAR_MAP[seller.avatarKey]
+      ? AVATAR_MAP[seller.avatarKey]
+      : require("../../assets/images/user3.png");
+
+
 
   // 🔹 从 Firestore 获取商品和卖家数据
   useEffect(() => {
@@ -80,22 +94,26 @@ export default function ItemDetailScreen() {
 
           // B. 卖家 (presence 集合，文档 id = sellerId)
           if (fetchedItem.sellerId) {
-            const sellerDocRef = doc(db, "presence", fetchedItem.sellerId);
-            const sellerDocSnap = await getDoc(sellerDocRef);
+          
+          const sellerDocRef = doc(db, "presence", fetchedItem.sellerId);
+          const sellerDocSnap = await getDoc(sellerDocRef);
 
-            if (sellerDocSnap.exists()) {
-              const sellerData = sellerDocSnap.data() as any;
-              setSeller({
-                uid: sellerDocSnap.id,
-                fullName: sellerData.displayName || "UniBazaar User",
-                avatarUrl: sellerData.avatarUrl || null,
-              });
-            } else {
-              setSeller({
-                uid: fetchedItem.sellerId,
-                fullName: "UniBazaar User",
-              });
-            }
+          if (sellerDocSnap.exists()) {
+            const sellerData = sellerDocSnap.data() as any;
+            setSeller({
+              uid: sellerDocSnap.id,
+              fullName: sellerData.displayName || "UniBazaar User",
+              avatarKey: sellerData.avatarKey || null,   // ⭐ 跟 profile 写入的字段对上
+            });
+          } else {
+            setSeller({
+              uid: fetchedItem.sellerId,
+              fullName: "UniBazaar User",
+              avatarKey: null,
+            });
+          }
+
+
           }
         }
       } catch (err) {
@@ -227,14 +245,8 @@ export default function ItemDetailScreen() {
         {/* 卖家 + 评分 */}
         <View style={styles.sellerRow}>
           <TouchableOpacity style={styles.sellerInfo} onPress={handleSellerPress}>
-            <Image
-              source={
-                seller?.avatarUrl
-                  ? { uri: seller.avatarUrl }
-                  : require("../../assets/images/chair.png") // 你的默认头像
-              }
-              style={styles.sellerAvatar}
-            />
+            
+            <Image source={sellerAvatarSource} style={styles.sellerAvatar} />
             <Text style={styles.sellerName}>
               {seller?.fullName || "UniBazaar User"}
             </Text>
