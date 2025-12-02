@@ -1,4 +1,3 @@
-// app/(tabs)/profile.tsx
 import React, { useEffect, useState } from "react";
 import {
   SafeAreaView,
@@ -15,7 +14,7 @@ import { auth, db } from "../../firebase/firebaseConfig";
 import { signOut } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
-// 可选头像列表（按自己实际图片改）
+
 const AVATAR_OPTIONS = [
 
   {
@@ -47,7 +46,7 @@ export default function ProfileScreen() {
     AVATAR_OPTIONS.find((a) => a.key === avatarKey)?.source ||
     AVATAR_OPTIONS[0].source;
 
-  // 读取 Firestore 里的用户信息（名字 + avatarKey）
+  // Read user information from Firestore.
   useEffect(() => {
     const loadUserProfile = async () => {
       if (!user) return;
