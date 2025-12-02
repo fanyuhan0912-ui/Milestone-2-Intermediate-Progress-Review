@@ -13,7 +13,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import {
   doc,
   getDoc,
@@ -23,8 +23,6 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { db, auth } from "../../firebase/firebaseConfig";
-import { useLocalSearchParams } from "expo-router";
-
 
 interface UserProfile {
   fullName: string;
@@ -34,31 +32,22 @@ interface UserProfile {
 }
 
 export default function UserHomepageScreen() {
-    const user = auth.currentUser;
-    const params = useLocalSearchParams();
-    const profileUid = params.uid as string | undefined;
-    const viewingUid = profileUid ?? auth.currentUser?.uid;
+  const user = auth.currentUser;
+  const params = useLocalSearchParams();
+  const profileUid = params.uid as string | undefined;
+  const viewingUid = profileUid ?? auth.currentUser?.uid;
 
-    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-    const [avatarKey, setAvatarKey] = useState<string>("avatar1");
-    const [listedItems, setListedItems] = useState<any[]>([]);
-    const [activeTab, setActiveTab] = useState<"items" | "reviews">("items");
-    const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [avatarKey, setAvatarKey] = useState<string>("avatar1");
+  const [listedItems, setListedItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-
-
-
-  // 本地头像映射表 —— 要和 profile.tsx 里用的一样
   const AVATAR_MAP: Record<string, any> = {
     avatar1: require("../../assets/images/user1.png"),
     avatar2: require("../../assets/images/user2.png"),
     avatar3: require("../../assets/images/user3.png"),
   };
 
-
-  // --------------------------------------------------------------
-  // ⭐ Functions: pick image
-  // --------------------------------------------------------------
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -66,18 +55,12 @@ export default function UserHomepageScreen() {
       quality: 1,
     });
 
-    if (!result.canceled) {
-      return result.assets[0].uri;
-    }
+    if (!result.canceled) return result.assets[0].uri;
     return null;
   };
 
-  // --------------------------------------------------------------
-  // ⭐ Functions: Upload image to Firebase Storage (EXPO SAFE METHOD)
-  // --------------------------------------------------------------
   const uploadToStorage = async (uri: string, path: string) => {
     const storage = getStorage();
-
     const blob: Blob = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.onload = () => resolve(xhr.response);
@@ -92,75 +75,52 @@ export default function UserHomepageScreen() {
     return await getDownloadURL(storageRef);
   };
 
-  // --------------------------------------------------------------
-  // ⭐ Load User Profile
-  // --------------------------------------------------------------
-useEffect(() => {
-  const fetchUserData = async () => {
-    if (!viewingUid) return;
+  // Load profile data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!viewingUid) return;
 
-    // 1) 读 users 集合
-    const userDocRef = doc(db, "users", viewingUid);
-    const userSnap = await getDoc(userDocRef);
+      const userDocRef = doc(db, "users", viewingUid);
+      const userSnap = await getDoc(userDocRef);
 
-    let finalName = "User"; // 默认名
-    let university = "Simon Fraser University";
-    let avatarUrl = null;
-    let backgroundUrl = null;
+      let finalName = "User";
+      let university = "Simon Fraser University";
+      let avatarUrl = null;
+      let backgroundUrl = null;
 
-    if (userSnap.exists()) {
-      const data = userSnap.data();
-      finalName = data.fullName || finalName;
-      university = data.university || university;
-      avatarUrl = data.avatarUrl || null;
-      backgroundUrl = data.backgroundUrl || null;
-    }
-
-    // 2) 读 presence 里的 displayName（在线状态里的名字）
-    const presenceRef = doc(db, "presence", viewingUid);
-    const presenceSnap = await getDoc(presenceRef);
-
-    if (presenceSnap.exists()) {
-      const pData = presenceSnap.data() as any;
-
-      if (pData.displayName) {
-        finalName = pData.displayName; // ⭐ 优先 presence 名字
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        finalName = data.fullName || finalName;
+        university = data.university || university;
+        avatarUrl = data.avatarUrl || null;
+        backgroundUrl = data.backgroundUrl || null;
       }
-      if (pData.avatarKey) {
-        setAvatarKey(pData.avatarKey);
+
+      const presenceRef = doc(db, "presence", viewingUid);
+      const presenceSnap = await getDoc(presenceRef);
+
+      if (presenceSnap.exists()) {
+        const pData = presenceSnap.data() as any;
+        if (pData.displayName) finalName = pData.displayName;
+        if (pData.avatarKey) setAvatarKey(pData.avatarKey);
       }
-    }
 
-    // ⭐ 最终写入 userProfile
-    setUserProfile({
-      fullName: finalName,
-      university,
-      avatarUrl,
-      backgroundUrl,
-    });
+      setUserProfile({ fullName: finalName, university, avatarUrl, backgroundUrl });
+      setLoading(false);
+    };
 
-    setLoading(false);
-  };
+    fetchUserData();
+  }, [viewingUid]);
 
-  fetchUserData();
-}, [viewingUid]);
-
-
-  // --------------------------------------------------------------
-  // ⭐ Load user listed items
-  // --------------------------------------------------------------
+  // Load user items
   useEffect(() => {
     const fetchListedItems = async () => {
       if (!user) return;
 
-      const q = query(
-        collection(db, "items"),
-        where("sellerId", "==", viewingUid)
-      );
-
+      const q = query(collection(db, "items"), where("sellerId", "==", viewingUid));
       const snap = await getDocs(q);
-      const items = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
+      const items = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setListedItems(items);
     };
 
@@ -168,7 +128,7 @@ useEffect(() => {
   }, [viewingUid]);
 
   const openDetail = (id: string) => {
-    router.push({ pathname: "/item/[id]", params: { id } });
+    router.push(`/item/${id}`);
   };
 
   if (loading)
@@ -178,73 +138,46 @@ useEffect(() => {
       </SafeAreaView>
     );
 
-   if (!userProfile)
+  if (!userProfile)
     return (
       <SafeAreaView style={styles.container}>
         <Text>User profile not found.</Text>
       </SafeAreaView>
     );
 
-  // ⭐ 根据 avatarKey 选本地头像（和 profile 一样）
   const avatarSource =
     avatarKey && AVATAR_MAP[avatarKey]
       ? AVATAR_MAP[avatarKey]
-      : require("../../assets/images/chair.png");
+      : require("../../assets/images/user1.png");
 
   return (
     <SafeAreaView style={styles.container}>
-
       <ScrollView>
-
-        {/* Back Button */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
         </View>
 
-        {/* --------------------------------------------------------------
-            ⭐ Profile Header with Background Upload
-        -------------------------------------------------------------- */}
         <View style={styles.profileHeader}>
           <TouchableOpacity
             onPress={async () => {
               if (!user) return;
-
               const uri = await pickImage();
               if (!uri) return;
-
-              const downloadURL = await uploadToStorage(
-                uri,
-                `users/${user.uid}/background.jpg`
-              );
-
-              await setDoc(
-                doc(db, "users", user.uid),
-                { backgroundUrl: downloadURL },
-                { merge: true }
-              );
-
+              const downloadURL = await uploadToStorage(uri, `users/${user.uid}/background.jpg`);
+              await setDoc(doc(db, "users", user.uid), { backgroundUrl: downloadURL }, { merge: true });
               setUserProfile((prev) => ({ ...prev!, backgroundUrl: downloadURL }));
             }}
           >
-            <Image
-              source={avatarSource}
-              style={styles.backgroundImage}
-              blurRadius={10}
-            />
+            <Image source={avatarSource} style={styles.backgroundImage} blurRadius={10} />
           </TouchableOpacity>
 
-          {/* Avatar */}
-          {/* Avatar */}
-        <View style={styles.profileInfoContainer}>
-          <Image source={avatarSource} style={styles.avatar} />
-
-          <View style={styles.profileTextContainer}>
-            <Text style={styles.profileName}>{userProfile.fullName}</Text>
-        
-          </View>
-            
+          <View style={styles.profileInfoContainer}>
+            <Image source={avatarSource} style={styles.avatar} />
+            <View style={styles.profileTextContainer}>
+              <Text style={styles.profileName}>{userProfile.fullName}</Text>
+            </View>
           </View>
 
           <View style={styles.universityBadge}>
@@ -253,69 +186,33 @@ useEffect(() => {
           </View>
         </View>
 
-        {/* -------------------------------------------------------------- */}
-        {/* ⭐ Tabs */}
-        {/* -------------------------------------------------------------- */}
-        <View style={styles.tabs}>
-          <TouchableOpacity onPress={() => setActiveTab("items")}>
-            <Text style={[styles.tabText, activeTab === "items" && styles.tabActive]}>
-              Items
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => setActiveTab("reviews")}>
-            <Text style={[styles.tabText, activeTab === "reviews" && styles.tabActive]}>
-              Reviews
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* -------------------------------------------------------------- */}
         {/* ⭐ Items List */}
-        {/* -------------------------------------------------------------- */}
-        {activeTab === "items" && (
-          <View style={styles.itemsContainer}>
-            {listedItems.length === 0 ? (
-              <Text style={styles.noItems}>No items listed yet.</Text>
-            ) : (
-              listedItems.map((item) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={styles.itemCard}
-                  onPress={() => openDetail(item.id)}
-                >
-                  <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.itemName}>{item.title}</Text>
-                    <Text style={styles.itemPrice}>${item.price}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))
-            )}
-          </View>
-        )}
-
-        {/* -------------------------------------------------------------- */}
-        {/* ⭐ Reviews */}
-        {/* -------------------------------------------------------------- */}
-        {activeTab === "reviews" && (
-          <View style={styles.itemsContainer}>
-            <Text style={styles.noItems}>No reviews yet.</Text>
-          </View>
-        )}
-
+        <View style={styles.itemsContainer}>
+          {listedItems.length === 0 ? (
+            <Text style={styles.noItems}>No items listed yet.</Text>
+          ) : (
+            listedItems.map((item) => (
+              <TouchableOpacity key={item.id} style={styles.itemCard} onPress={() => openDetail(item.id)}>
+                <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.itemName}>{item.title}</Text>
+                  <Text style={styles.itemPrice}>${item.price}</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-/* --------------------------------------------------------------
-   Styles
--------------------------------------------------------------- */
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
   header: { paddingHorizontal: 15, paddingVertical: 10 },
+
   profileHeader: { marginBottom: 10 },
   backgroundImage: { width: "100%", height: 200 },
 
@@ -336,22 +233,8 @@ const styles = StyleSheet.create({
     borderColor: "#fff",
   },
 
-  profileTextContainer: { flex: 1, marginLeft: 15, marginBottom:30,   shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 6,},
+  profileTextContainer: { flex: 1, marginLeft: 15, marginBottom: 30 },
   profileName: { fontSize: 22, fontWeight: "bold", color: "#fff" },
-
-
-
-  editButton: {
-    backgroundColor: "rgba(255,255,255,0.3)",
-    paddingHorizontal: 15,
-    paddingVertical: 5,
-    borderRadius: 15,
-  },
-  editButtonText: { color: "#fff", fontSize: 12 },
 
   universityBadge: {
     position: "absolute",
@@ -365,23 +248,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   universityText: { marginLeft: 4, color: "#555" },
-
-  // Tabs
-  tabs: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  tabText: { fontSize: 16, color: "#555" },
-  tabActive: {
-    color: "#FF7E3E",
-    fontWeight: "bold",
-    borderBottomWidth: 2,
-    borderBottomColor: "#FF7E3E",
-    paddingBottom: 4,
-  },
 
   itemsContainer: { padding: 20 },
   noItems: { color: "#999", textAlign: "center", marginTop: 20 },
