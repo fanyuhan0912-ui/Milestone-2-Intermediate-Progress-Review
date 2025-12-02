@@ -31,7 +31,7 @@ type Item = {
   sellerId: string;
   lat: number;
   lon: number;
-  title?: string; // Add this line
+  title?: string; 
 };
 
 
@@ -43,22 +43,23 @@ export default function NearMeScreen() {
   const [denied, setDenied] = useState(false);
   const [loading, setLoading] = useState(true);
   const [region, setRegion] = useState<Region | null>(null);
-  const [me, setMe] = useState<{
-    lat: number;
-    lon: number;
-    accuracy?: number;
-  } | null>(null);
+const [me, setMe] = useState<{
+  lat: number;
+  lon: number;
+  accuracy: number | null;
+} | null>(null);
+
   const [peers, setPeers] = useState<Presence[]>([]);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
 
-  // ⭐ Firebase 商品
+
   const [items, setItems] = useState<Item[]>([]);
 
-  // ⭐ 是否显示商品列表（还是地图）
   const [showList, setShowList] = useState(false);
 
   const watchSub = useRef<Location.LocationSubscription | null>(null);
-  const heartbeatTimer = useRef<NodeJS.Timer | null>(null);
+ const heartbeatTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const [selectedUser, setSelectedUser] = useState<Presence | null>(null);
   const [selectedUserItems, setSelectedUserItems] = useState<Item[]>([]);
   const [showUserCard, setShowUserCard] = useState(false);
@@ -118,17 +119,18 @@ export default function NearMeScreen() {
 
 
   // Firebase item
-  useEffect(() => {
-    const unsub = onSnapshot(collection(db, "items"), (snap) => {
-      const fetched = snap.docs.map((d) => ({
-        id: d.id,
-        ...(d.data() as Item),
-      }));
-      setItems(fetched);
-    });
+useEffect(() => {
+  const unsub = onSnapshot(collection(db, "items"), (snap) => {
+   const fetched: Item[] = snap.docs.map((d) => {
+  const data = d.data() as Omit<Item, "id">;
+  return { id: d.id, ...data };
+});
 
-    return () => unsub();
-  }, []);
+    setItems(fetched);
+  });
+
+  return () => unsub();
+}, []);
 
 
   // Online presence
@@ -258,13 +260,14 @@ export default function NearMeScreen() {
 
           {/* My position */}
           {me && (
-            <>
+    <>
               <Marker
                 coordinate={{ latitude: me.lat, longitude: me.lon }}
                 pinColor="#2f6fed"
                 title="You"
               />
-              {me.accuracy && me.accuracy < 500 && (
+
+              {me.accuracy !== null && me.accuracy < 500 && (
                 <Circle
                   center={{ latitude: me.lat, longitude: me.lon }}
                   radius={me.accuracy}
@@ -275,6 +278,7 @@ export default function NearMeScreen() {
             </>
           )}
 
+
           {/* Online peers */}
           {peers
             .filter((p) => p.uid !== auth.currentUser?.uid)
@@ -283,17 +287,17 @@ export default function NearMeScreen() {
                 key={p.uid}
                 coordinate={{ latitude: p.lat, longitude: p.lon }}
                 title={p.displayName || p.email}
-                calloutEnabled={false}
-                onPress={(e)=>{
-                    e.stopPropagation();
-                    console.log("PEER ICON PRESSED:", p.uid);
-                    setSelectedUser(p);
-                    const userItems = items.filter((item) => item.sellerId === p.uid);
-                    setSelectedItem(null);
-                    setSelectedUserItems(userItems);
-                    setShowUserCard(true);
+                onPress={(e) => {
+                  e.stopPropagation();
+                  console.log("PEER ICON PRESSED:", p.uid);
+                  setSelectedUser(p);
+                  const userItems = items.filter((item) => item.sellerId === p.uid);
+                  setSelectedItem(null);
+                  setSelectedUserItems(userItems);
+                  setShowUserCard(true);
                 }}
               />
+
             ))}
         </MapView>
       )}
@@ -406,7 +410,7 @@ export default function NearMeScreen() {
         </View>
       )}
 
-      {/* ⭐ 在线人数 */}
+     
       <View
       pointerEvents="box-none"
         style={{

@@ -24,7 +24,6 @@ export default function ListedScreen() {
  
   useEffect(() => {
     const fetchListedItems = async () => {
-      // 确保用户已登录
       if (!user) {
         setError("Please log in to see your listed items.");
         setLoading(false);

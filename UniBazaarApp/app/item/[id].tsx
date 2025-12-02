@@ -27,7 +27,7 @@ import { db, auth } from "../../firebase/firebaseConfig";
 import { Ionicons } from "@expo/vector-icons";
 import { useFavorites } from "../FavoritesContext";
 
-// 和你项目里的 Item 保持兼容
+
 interface Item {
   id: string;
   title?: string;
@@ -58,7 +58,7 @@ export default function ItemDetailScreen() {
   const [seller, setSeller] = useState<Seller | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // ⭐ 收藏状态（来自 FavoritesContext）
+
   const { favorites, toggleFavorite, isFavorite } = useFavorites();
   const isFav = item ? isFavorite(item.id) : false;
 
@@ -74,13 +74,13 @@ export default function ItemDetailScreen() {
 
 
 
-  // 🔹 从 Firestore 获取商品和卖家数据
+  
   useEffect(() => {
     if (!id) return;
 
     const fetchItemAndSeller = async () => {
       try {
-        // A. 商品
+    
         const itemDocRef = doc(db, "items", id as string);
         const itemDocSnap = await getDoc(itemDocRef);
 
@@ -92,7 +92,7 @@ export default function ItemDetailScreen() {
           const fetchedItem: Item = { id: itemDocSnap.id, ...data };
           setItem(fetchedItem);
 
-          // B. 卖家 (presence 集合，文档 id = sellerId)
+       
           if (fetchedItem.sellerId) {
           
           const sellerDocRef = doc(db, "presence", fetchedItem.sellerId);
@@ -103,7 +103,7 @@ export default function ItemDetailScreen() {
             setSeller({
               uid: sellerDocSnap.id,
               fullName: sellerData.displayName || "UniBazaar User",
-              avatarKey: sellerData.avatarKey || null,   // ⭐ 跟 profile 写入的字段对上
+              avatarKey: sellerData.avatarKey || null,  
             });
           } else {
             setSeller({
@@ -126,7 +126,7 @@ export default function ItemDetailScreen() {
     fetchItemAndSeller();
   }, [id]);
 
-  // 🔹 Chat 按钮
+ 
   const handleChatPress = async () => {
     const currentUser = auth.currentUser;
     if (!currentUser) {
@@ -165,7 +165,7 @@ export default function ItemDetailScreen() {
           sellerId: item.sellerId,
           itemId: item.id,
           itemTitle: item.title ?? "",
-          participants: [userId, item.sellerId], // 方便 chat list 查询
+          participants: [userId, item.sellerId], 
           lastMessage: "",
           lastMessageAt: serverTimestamp(),
           createdAt: serverTimestamp(),
@@ -180,16 +180,17 @@ export default function ItemDetailScreen() {
     }
   };
 
-  // 🔹 点击卖家头像/名字
-  const handleSellerPress = () => {
-    if (!seller) return;
-    router.push({
-        pathname:"profile_pages/userHomepage",
-        params:{uid:seller.uid},
-        })
-  };
+  
+const handleSellerPress = () => {
+  if (!seller) return;
+  router.push({
+    pathname: "/profile_pages/userHomepage",
+    params: { uid: seller.uid },
+  });
+};
 
-  // 🔹 loading & not found
+
+  
   if (loading) {
     return (
       <View style={styles.center}>
@@ -209,11 +210,10 @@ export default function ItemDetailScreen() {
     );
   }
 
-  // 🔹 页面 UI
+
   return (
     <>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* 顶部大图 + 返回 + 收藏 */}
         <View style={styles.imageWrapper}>
           {item.imageUrl ? (
             <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
@@ -244,7 +244,7 @@ export default function ItemDetailScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* 卖家 + 评分 */}
+
         <View style={styles.sellerRow}>
           <TouchableOpacity style={styles.sellerInfo} onPress={handleSellerPress}>
             
@@ -260,7 +260,6 @@ export default function ItemDetailScreen() {
           </View>
         </View>
 
-        {/* 标题 + 分类 pill */}
         <View style={styles.titleRow}>
           <Text style={styles.title}>{item.title ?? "Untitled item"}</Text>
           {item.category ? (
@@ -270,7 +269,7 @@ export default function ItemDetailScreen() {
           ) : null}
         </View>
 
-        {/* 描述 */}
+ 
         <View style={styles.descriptionContainer}>
           <Text style={styles.sectionLabel}>Description</Text>
           <Text style={styles.description}>
@@ -278,11 +277,10 @@ export default function ItemDetailScreen() {
           </Text>
         </View>
 
-        {/* 留出底部栏空间 */}
         <View style={{ height: 120 }} />
       </ScrollView>
 
-      {/* 底部：价格 + Chat 按钮 */}
+     
       <View style={styles.bottomBar}>
         <View style={styles.priceBlock}>
           <Text style={styles.priceLabel}>Price</Text>
@@ -310,7 +308,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  // 顶部大图区域
+
   imageWrapper: {
     position: "relative",
     width,
@@ -354,7 +352,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
 
-  // 卖家 + 评分
+ 
   sellerRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -397,7 +395,7 @@ const styles = StyleSheet.create({
     color: "#F59E0B",
   },
 
-  // 标题 + 分类 pill
+  
   titleRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -426,7 +424,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  // 描述
+ 
   descriptionContainer: {
     paddingHorizontal: 20,
     marginTop: 16,
@@ -443,7 +441,7 @@ const styles = StyleSheet.create({
     color: "#4B5563",
   },
 
-  // 底部栏
+  
   bottomBar: {
     position: "absolute",
     bottom: 0,

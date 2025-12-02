@@ -12,7 +12,7 @@ import {
 import { router } from "expo-router";
 import { auth, db } from "../firebase/firebaseConfig";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";   // ⭐ 必须加这个
+import { doc, setDoc } from "firebase/firestore";  
 
 export default function SignUpScreen() {
   const [fullName, setFullName] = useState("");
@@ -27,7 +27,6 @@ export default function SignUpScreen() {
     }
 
     try {
-      // 1. Create user in Auth
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -35,12 +34,12 @@ export default function SignUpScreen() {
       );
       const user = userCredential.user;
 
-      // 2. Save fullName to Firebase Auth (optional)
+     
       await updateProfile(user, {
         displayName: fullName,
       });
 
-      // ⭐⭐⭐ 3. Save user data in Firestore (THIS IS THE FIX!) ⭐⭐⭐
+      
       await setDoc(doc(db, "users", user.uid), {
         fullName: fullName,
         university: schoolName,

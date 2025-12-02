@@ -49,7 +49,7 @@ export default function ChatDetailScreen() {
   const currentUser = auth.currentUser;
   const userId = currentUser?.uid;
 
-  // 🔹 读 chat 文档（拿 itemTitle，当成顶部标题）
+
   useEffect(() => {
     const loadChatInfo = async () => {
       const chatRef = doc(db, "chats", chatId);
@@ -64,7 +64,7 @@ export default function ChatDetailScreen() {
     loadChatInfo();
   }, [chatId]);
 
-  // 🔹 监听 messages 子集合，实时更新消息列表
+  
   useEffect(() => {
     const msgsCol = collection(db, "chats", chatId, "messages");
     const q = query(msgsCol, orderBy("createdAt", "asc"));
@@ -79,7 +79,6 @@ export default function ChatDetailScreen() {
       setMessages(list);
       setLoading(false);
 
-      // 自动滚动到底部
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
@@ -88,10 +87,10 @@ export default function ChatDetailScreen() {
     return () => unsub();
   }, [chatId]);
 
-    // ⭐⭐⭐ Step 3：完成交易函数（买家→purchased，卖家→sold）
+   
     const handleCompleteTransaction = async () => {
       if (!chatInfo || !chatInfo.itemId || !chatInfo.sellerId || !chatInfo.buyerId) {
-        alert("交易信息缺失");
+        alert("Transaction information is missing.");
         return;
       }
 
@@ -101,30 +100,30 @@ export default function ChatDetailScreen() {
 
       try {
         if (userId === buyerId) {
-          // ⭐ 我是买家 → 添加到 purchased
+        
           await setDoc(
             doc(db, "users", buyerId, "purchased", itemId),
             { itemId, completedAt: new Date() }
           );
-          alert("已添加到 Purchased！");
+          alert("Added to Purchased!");
         } else if (userId === sellerId) {
-          // ⭐ 我是卖家 → 添加到 sold
+         
           await setDoc(
             doc(db, "users", sellerId, "sold", itemId),
             { itemId, completedAt: new Date()}
           );
-          alert("已添加到 Sold！");
+          alert("Added to Sold!");
         } else {
-          alert("你不是买家也不是卖家，不能完成交易");
+          alert("You are neither a buyer nor a seller and cannot complete the transaction.");
         }
       } catch (e) {
         console.log(e);
-        alert("交易失败，请稍后重试");
+        alert("Transaction failed. Please try again later.");
       }
     };
 
 
-  // 🔹 发送消息
+
   const handleSend = async () => {
     if (!userId) {
       alert("Please log in to send messages.");
@@ -137,14 +136,14 @@ export default function ChatDetailScreen() {
 
     const msgsCol = collection(db, "chats", chatId, "messages");
 
-    // 1) 往 messages 子集合里加一条
+   
     await addDoc(msgsCol, {
       text,
       senderId: userId,
       createdAt: serverTimestamp(),
     });
 
-    // 2) 更新 chats 里的 lastMessage / lastMessageAt
+    
     const chatRef = doc(db, "chats", chatId);
     await updateDoc(chatRef, {
       lastMessage: text,
@@ -194,7 +193,7 @@ export default function ChatDetailScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
     >
-      {/* 顶部简单 header */}
+   
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#333" />
@@ -229,7 +228,7 @@ export default function ChatDetailScreen() {
       )}
 
 
-      {/* 消息列表 */}
+
       <FlatList
         ref={flatListRef}
         data={messages}
@@ -238,7 +237,7 @@ export default function ChatDetailScreen() {
         contentContainerStyle={styles.messagesContainer}
       />
 
-      {/* 底部输入框 */}
+   
       <View style={styles.inputBar}>
         <TextInput
           style={styles.input}

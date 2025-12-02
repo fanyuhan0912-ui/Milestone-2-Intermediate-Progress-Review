@@ -11,7 +11,7 @@ export default function Welcome() {
         backgroundColor: '#FFF8F0' 
       }}
     >
-      {/* 插画 */}
+     
       <Image 
         source={require('./image/loginImg.png')
 }
@@ -19,12 +19,12 @@ export default function Welcome() {
         resizeMode="contain"
       />
 
-      {/* 标题 */}
+ 
       <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 10 }}>
         Easy Buy & Sell
       </Text>
 
-      {/* 描述文字 */}
+    
       <Text style={{ 
         fontSize: 14, 
         color: '#666', 
@@ -35,7 +35,7 @@ export default function Welcome() {
         A safe and fast way to exchange secondhand goods on campus.
       </Text>
 
-      {/* 登录按钮 */}
+   
       <TouchableOpacity
         style={{
           backgroundColor: '#234594',
@@ -50,7 +50,7 @@ export default function Welcome() {
         <Text style={{ color: '#fff', fontSize: 18 }}>Login</Text>
       </TouchableOpacity>
 
-      {/* 注册按钮 */}
+ 
       <TouchableOpacity
         style={{
           paddingVertical: 14,

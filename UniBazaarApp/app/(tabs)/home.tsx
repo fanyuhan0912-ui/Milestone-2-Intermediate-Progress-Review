@@ -252,7 +252,7 @@ const handleSearch = () => {
     onSubmitEditing={handleSearch}
   />
 
-  {/* sight side search button */}
+
   <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
     <Text style={styles.searchButtonText}>Go</Text>
   </TouchableOpacity>
@@ -272,7 +272,7 @@ const handleSearch = () => {
         ))}
       </View>
 
-      {/* All items section */}
+
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>{currentCategoryLabel}</Text>
         <Text style={styles.sectionCount}>
@@ -280,7 +280,7 @@ const handleSearch = () => {
         </Text>
       </View>
 
-      {/* card backgroundColor */}
+  
  
         {displayedItems.length === 0 ? (
           <View style={styles.emptyInCategory}>
@@ -307,7 +307,7 @@ const handleSearch = () => {
   );
 }
 
-/* categories buttpn */
+
 function CategoryButton({
   label,
   image,
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: PAGE_BG,
     paddingHorizontal: 16,
-    paddingTop: 60,//Hi,user wellcome to...
+    paddingTop: 60,
 
   },
 
@@ -372,7 +372,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
 
-  /* Header */
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -464,7 +463,7 @@ searchInput: {
     fontWeight: "600",
   },
 
-  /* Section header */
+  
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -482,12 +481,12 @@ searchInput: {
   },
 
 
-  /* Card */
+
   shadowWrapper: {
     width: "48%",
     marginBottom: 14,
 
-    // 阴影
+
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,

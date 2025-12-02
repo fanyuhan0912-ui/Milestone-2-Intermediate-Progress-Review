@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
 
   signUpLink: {
     fontSize: 14,
-    color: "#2f6fed",   // 蓝色
+    color: "#2f6fed",   
     textDecorationLine: "underline",
     fontWeight: "600",
   },

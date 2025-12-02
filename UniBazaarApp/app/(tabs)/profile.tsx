@@ -41,17 +41,17 @@ export default function ProfileScreen() {
   const [avatarKey, setAvatarKey] = useState<string>("chair");
   const [avatarModalVisible, setAvatarModalVisible] = useState(false);
 
-  // 当前头像的图片
+  
   const currentAvatarSource =
     AVATAR_OPTIONS.find((a) => a.key === avatarKey)?.source ||
     AVATAR_OPTIONS[0].source;
 
-  // Read user information from Firestore.
+  
   useEffect(() => {
     const loadUserProfile = async () => {
       if (!user) return;
       try {
-        // 如果你用的是 "users" 集合，把这里的 "presence" 改成 "users"
+       
         const ref = doc(db, "presence", user.uid);
         const snap = await getDoc(ref);
         if (snap.exists()) {
@@ -69,12 +69,12 @@ export default function ProfileScreen() {
     loadUserProfile();
   }, [user]);
 
-  // 点击头像：打开弹窗
+  
   const handleAvatarPress = () => {
     setAvatarModalVisible(true);
   };
 
-  // 选择某个头像：更新本地 state + Firestore
+  
   const handleSelectAvatar = async (key: string) => {
     setAvatarKey(key);
     setAvatarModalVisible(false);
@@ -82,7 +82,7 @@ export default function ProfileScreen() {
     if (!user) return;
 
     try {
-      const ref = doc(db, "presence", user.uid); // 或 "users"
+      const ref = doc(db, "presence", user.uid); 
       await setDoc(
         ref,
         {
@@ -95,7 +95,7 @@ export default function ProfileScreen() {
     }
   };
 
-  // 退出登录
+ 
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -105,16 +105,16 @@ export default function ProfileScreen() {
     }
   };
 
-  // 跳转到 profile_pages 下面的子页面
+  
   const handleNavigation = (path: string) => {
-    // 例如 path = "/profile_pages/userHomepage"
+    
     router.push(path as any);
   };
 
 return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* 顶部标题栏 */}
+       
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Profile</Text>
           <TouchableOpacity onPress={handleLogout}>
@@ -122,30 +122,22 @@ return (
           </TouchableOpacity>
         </View>
 
-      {/* 个人信息卡片 */}
+ 
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={() => handleNavigation("/profile_pages/userHomepage")}
       >
         <View style={styles.profileCard}>
-          {/* 头像：可点击打开弹窗 */}
+        
           <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.8}>
             <Image source={currentAvatarSource} style={styles.avatar} />
           </TouchableOpacity>
 
-          {/* 名字 + 星级 */}
+        
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{userName}</Text>
-            <View style={styles.ratingContainer}>
-              <Ionicons name="star" size={16} color="#FFBA00" />
-              <Ionicons name="star" size={16} color="#FFBA00" />
-              <Ionicons name="star" size={16} color="#FFBA00" />
-              <Ionicons name="star" size={16} color="#FFBA00" />
-              <Ionicons name="star-half" size={16} color="#FFBA00" />
-            </View>
           </View>
 
-          {/* 右侧箭头 */}
           <TouchableOpacity
             onPress={() => handleNavigation("/profile_pages/userHomepage")}
           >
@@ -219,7 +211,7 @@ return (
 
 
 
-      {/* ===== 头像选择弹窗 ===== */}
+      
       <Modal
         visible={avatarModalVisible}
         transparent
@@ -259,9 +251,9 @@ return (
     </SafeAreaView>
   );
 }
-// ========= 样式 =========
+
 const styles = StyleSheet.create({
-  // 外层 SafeArea，只负责占满 & 背景色
+
   safeArea: {
     flex: 1,
     backgroundColor: "#F7F7F7",
@@ -365,7 +357,7 @@ const styles = StyleSheet.create({
     color: "#444",
   },
 
-  // ==== Modal 相关 ====
+
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",

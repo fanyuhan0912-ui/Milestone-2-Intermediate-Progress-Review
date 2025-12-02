@@ -186,7 +186,7 @@ export default function UserHomepageScreen() {
           </View>
         </View>
 
-        {/* ⭐ Items List */}
+       
         <View style={styles.itemsContainer}>
           {listedItems.length === 0 ? (
             <Text style={styles.noItems}>No items listed yet.</Text>

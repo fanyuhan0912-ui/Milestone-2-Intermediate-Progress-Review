@@ -121,7 +121,7 @@ export default function ChatListScreen() {
     );
   }
 
-  // ⭐ 右侧滑出“Delete”按钮的渲染函数
+ 
   const renderRightActions = (chat: Chat) => (
     <TouchableOpacity
       style={styles.deleteButton}

@@ -20,9 +20,7 @@ export default function SoldScreen() {
   const [soldList, setSoldList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // -----------------------------------------------------
-  // ⭐ Load sold list from Firestore
-  // -----------------------------------------------------
+  
   useEffect(() => {
     const loadSold = async () => {
       if (!user) return;
@@ -36,7 +34,7 @@ export default function SoldScreen() {
         for (const snap of soldSnap.docs) {
           const { itemId, completedAt } = snap.data();
 
-          // ⭐ 再去 items collection 取 item 详情
+        
           const itemRef = doc(db, "items", itemId);
           const itemSnap = await getDoc(itemRef);
 
@@ -44,14 +42,14 @@ export default function SoldScreen() {
             list.push({
               id: itemId,
               completedAt,
-              ...itemSnap.data(), // 包含 title, price, imageUrl
+              ...itemSnap.data(),
             });
           }
         }
 
         setSoldList(list);
       } catch (e) {
-        console.log("❌ Error loading sold:", e);
+        console.log("Error loading sold:", e);
       }
 
       setLoading(false);
@@ -108,9 +106,7 @@ export default function SoldScreen() {
   );
 }
 
-// -----------------------------------------------------
-// ⭐ Styles
-// -----------------------------------------------------
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
