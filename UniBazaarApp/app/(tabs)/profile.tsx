@@ -57,37 +57,37 @@ const handleNavigation = (path: Href) => {
             </View>
         </TouchableOpacity>
 
-<View style={styles.section1}>
+<View style={styles.section}>
         <Text style={styles.sectionTitle}>Buying</Text>
         <View style={styles.iconGrid}>
           <View style={styles.iconContainer}>
             <TouchableOpacity
               style={styles.iconButton}
               onPress={() => handleNavigation('/profile_pages/favourite')}>
-              <Ionicons name="heart-outline" size={28} color="#FF7E3E" />
+              <Ionicons name="heart-outline" size={28} color="#224594" />
             </TouchableOpacity>
-            <Text style={styles.iconLabel}>Favourite</Text>
+            <Text style={styles.iconLabel1}>Favourite</Text>
           </View>
           <View style={styles.iconContainer}>
             <TouchableOpacity
               style={styles.iconButton}
               onPress={() => handleNavigation('/profile_pages/purchased')}>
-              <Ionicons name="cart-outline" size={28} color="#FF7E3E" />
+              <Ionicons name="cart-outline" size={28} color="#224594" />
             </TouchableOpacity>
-            <Text style={styles.iconLabel}>Purchased</Text>
+            <Text style={styles.iconLabel1}>Purchased</Text>
           </View>
           <View style={styles.iconContainer}>
             <TouchableOpacity
               style={styles.iconButton}
               onPress={() => handleNavigation('/profile_pages/toReview')}>
-              <Ionicons name="chatbox-outline" size={28} color="#FF7E3E" />
+              <Ionicons name="chatbox-outline" size={28} color="#224594" />
             </TouchableOpacity>
-            <Text style={styles.iconLabel}>To Review</Text>
+            <Text style={styles.iconLabel1}>To Review</Text>
           </View>
         </View>
       </View>
 
-      <View style={styles.section2}>
+      <View style={styles.section}>
         <Text style={styles.sectionTitle}>Selling</Text>
         <View style={styles.iconGrid}>
           <View style={styles.iconContainer}>
@@ -184,21 +184,9 @@ const styles = StyleSheet.create({
     color: '#FE8A0D',
     fontSize: 14,
   },
-  section1: {
-    backgroundColor: '#E3F0FF',
-    borderRadius: 15,
-    padding: 20,
-    marginHorizontal: 20,
-    marginTop: 20,
-    width: '90%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  section2: {
-    backgroundColor: '#FFE7CF',
+
+  section: {
+    backgroundColor: '#fff',
     borderRadius: 15,
     padding: 20,
     marginHorizontal: 20,
@@ -213,7 +201,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 15,
+    marginBottom: 5,
   },
   iconGrid: {
     flexDirection: 'row',
@@ -229,15 +217,21 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 5,
     position: 'relative',
   },
   iconButtonActive: {
     backgroundColor: '#FFEEDB',
   },
-  iconLabel: {
+    iconLabel1: {
+    marginTop:-10,
     fontSize: 12,
-    color: '#333',
+    color: '#224594',
+    textAlign: 'center',
+  },
+  iconLabel: {
+    marginTop:-10,
+    fontSize: 12,
+    color: '#ac5e0bff',
     textAlign: 'center',
   },
   badge: {

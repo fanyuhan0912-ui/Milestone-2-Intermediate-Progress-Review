@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: 20,
+    paddingTop: 60,
     paddingHorizontal: 16,
     paddingBottom: 12,
     backgroundColor: "#ffffff",
@@ -235,20 +235,20 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   bubbleMe: {
-    backgroundColor: "#2f6fed",
+    backgroundColor: "#224594",
     borderBottomRightRadius: 4,
   },
   bubbleOther: {
-    backgroundColor: "#e5e7eb",
+    backgroundColor: "#FE8A0D",
     borderBottomLeftRadius: 4,
   },
   textMe: {
     color: "#ffffff",
-    fontSize: 14,
+    fontSize: 18,
   },
   textOther: {
     color: "#111827",
-    fontSize: 14,
+    fontSize: 18,
   },
 
   inputBar: {
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
   },
   sendBtn: {
     marginLeft: 8,
-    backgroundColor: "#2f6fed",
+    backgroundColor: "#224594",
     borderRadius: 20,
     width: 40,
     height: 40,

@@ -22,6 +22,10 @@ export default function RootLayout() {
               name="item/[id]"            
               options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="chat/[id]"            
+              options={{ headerShown: false }}
+            />
             <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
           </Stack>
 
