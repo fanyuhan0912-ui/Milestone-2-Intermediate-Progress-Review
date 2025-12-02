@@ -38,7 +38,7 @@ export default function UserHomepageScreen() {
   const user = auth.currentUser;
   const params = useLocalSearchParams();
   const profileUid = params.uid as string | undefined;
-  // 如果有传 uid，就看别人的主页；否则看自己的
+
   const viewingUid = profileUid ?? user?.uid ?? null;
 
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -52,7 +52,7 @@ export default function UserHomepageScreen() {
     avatar3: require("../../assets/images/user3.png"),
   };
 
-  /** 选图 */
+  
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -64,7 +64,7 @@ export default function UserHomepageScreen() {
     return null;
   };
 
-  /** 上传图片到 Storage，返回下载 URL */
+ 
   const uploadToStorage = async (uri: string, path: string) => {
     const storage = getStorage();
     const blob: Blob = await new Promise((resolve, reject) => {
@@ -81,7 +81,6 @@ export default function UserHomepageScreen() {
     return await getDownloadURL(storageRef);
   };
 
-  /** 加载用户资料 */
   useEffect(() => {
     const fetchUserData = async () => {
       if (!viewingUid) return;
@@ -123,7 +122,7 @@ export default function UserHomepageScreen() {
     fetchUserData();
   }, [viewingUid]);
 
-  /** 加载该用户的所有商品（不区分 active / sold） */
+ 
   useEffect(() => {
     const fetchListedItems = async () => {
       if (!viewingUid) return;
@@ -141,31 +140,29 @@ export default function UserHomepageScreen() {
     fetchListedItems();
   }, [viewingUid]);
 
-  /** 进入商品详情 */
+
   const openDetail = (id: string) => {
     router.push(`/item/${id}`);
   };
 
-  /** 点击 Sold：标记为已售出 + 记到 users/{uid}/sold */
   const handleMarkAsSold = async (item: any) => {
     const currentUser = auth.currentUser;
     if (!currentUser) return;
 
     try {
-      // 1. 更新 items 里的状态
+  
       await updateDoc(doc(db, "items", item.id), {
         status: "sold",
         soldAt: serverTimestamp(),
         soldBy: currentUser.uid,
       });
 
-      // 2. 写入 users/{uid}/sold 子集合（给 Sold 页面用）
       await addDoc(collection(db, "users", currentUser.uid, "sold"), {
         itemId: item.id,
         completedAt: serverTimestamp(),
       });
 
-      // 3. 本地 state 更新，给这一条打上 sold 状态
+
       setListedItems((prev) =>
         prev.map((it) =>
           it.id === item.id ? { ...it, status: "sold" } : it
@@ -200,14 +197,14 @@ export default function UserHomepageScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-        {/* 顶部返回 */}
+     
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
         </View>
 
-        {/* 头像与背景 */}
+    
         <View style={styles.profileHeader}>
           <TouchableOpacity
             disabled={!isOwnProfile}
@@ -252,7 +249,6 @@ export default function UserHomepageScreen() {
           </View>
         </View>
 
-        {/* 商品列表 */}
         <View style={styles.itemsContainer}>
           {listedItems.length === 0 ? (
             <Text style={styles.noItems}>No items listed yet.</Text>
@@ -279,7 +275,6 @@ export default function UserHomepageScreen() {
                     </View>
                   </TouchableOpacity>
 
-                  {/* 只有自己看自己的主页时，才显示 Sold 按钮 */}
                   {isOwnProfile && !isSold && (
                     <TouchableOpacity
                       style={styles.soldButton}
