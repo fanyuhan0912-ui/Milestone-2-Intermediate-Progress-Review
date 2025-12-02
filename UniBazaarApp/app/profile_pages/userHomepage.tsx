@@ -281,7 +281,7 @@ export default function UserHomepageScreen() {
                 >
                   <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.itemName}>{item.name}</Text>
+                    <Text style={styles.itemName}>{item.title}</Text>
                     <Text style={styles.itemPrice}>${item.price}</Text>
                   </View>
                 </TouchableOpacity>

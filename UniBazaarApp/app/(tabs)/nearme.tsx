@@ -449,7 +449,7 @@ export default function NearMeScreen() {
 
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 16, fontWeight: "600" }}>
-              {selectedItem.name}
+              {selectedItem.title}
             </Text>
             <Text style={{ fontWeight: "bold", fontSize: 16, marginTop: 4 }}>
               ${selectedItem.price}
