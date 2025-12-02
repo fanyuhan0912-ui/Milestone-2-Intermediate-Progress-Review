@@ -12,7 +12,7 @@ import {
 import { router } from "expo-router";
 import { auth, db } from "../firebase/firebaseConfig";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";   // ⭐ 必须加这个
 
 export default function SignUpScreen() {
   const [fullName, setFullName] = useState("");
@@ -27,7 +27,7 @@ export default function SignUpScreen() {
     }
 
     try {
-      // 1. 创建 Auth 用户
+      // 1. Create user in Auth
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -35,12 +35,12 @@ export default function SignUpScreen() {
       );
       const user = userCredential.user;
 
-      // 2. 在 Auth 里保存名字（可选）
+      // 2. Save fullName to Firebase Auth (optional)
       await updateProfile(user, {
         displayName: fullName,
       });
 
-      // 3. 在 Firestore 里建 users 文档
+      // ⭐⭐⭐ 3. Save user data in Firestore (THIS IS THE FIX!) ⭐⭐⭐
       await setDoc(doc(db, "users", user.uid), {
         fullName: fullName,
         university: schoolName,
@@ -57,13 +57,10 @@ export default function SignUpScreen() {
     } catch (error) {
       console.error("Sign up error:", error);
       let message = "Sign up failed.";
-      // @ts-ignore（如果你用 ts 可以加这一行或者改一下类型判断）
       if (error.code === "auth/email-already-in-use")
         message = "This email is already in use.";
-      // @ts-ignore
       if (error.code === "auth/invalid-email")
         message = "Please enter a valid email.";
-      // @ts-ignore
       if (error.code === "auth/weak-password")
         message = "Password should be at least 6 characters.";
       Alert.alert("Error", message);
@@ -150,80 +147,3 @@ export default function SignUpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#234594",
-    paddingTop: 40,
-    paddingHorizontal: 16,
-  },
-  illustrationWrapper: {
-    alignItems: "center",
-  
-  },
-  illustration: {
-    width: "85%",
-    height: 180,
-  },
-  card: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    borderRadius: 20,
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "700",
-    marginBottom: 16,
-    color: "#111827",
-  },
-  inputGroup: {
-    marginBottom: 12,
-  },
-  label: {
-    fontSize: 14,
-    color: "#4B5563",
-    marginBottom: 4,
-  },
-  input: {
-    height: 44,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    paddingHorizontal: 10,
-    backgroundColor: "#F9FAFB",
-  },
-  button: {
-    marginTop: 16,
-    backgroundColor: "#fe8a0e",
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  bottomRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 12,
-  },
-  bottomText: {
-    fontSize: 13,
-    color: "#4B5563",
-  },
-  bottomLink: {
-    marginLeft: 4,
-    fontSize: 13,
-    color: "#2f6fed",
-    fontWeight: "600",
-  },
-});
