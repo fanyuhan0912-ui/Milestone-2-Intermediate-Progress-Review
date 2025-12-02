@@ -21,10 +21,10 @@ import {
   getDoc,
   updateDoc,
   serverTimestamp,
+  setDoc,
 } from "firebase/firestore";
 import { db, auth } from "../../firebase/firebaseConfig";
 import { Ionicons } from "@expo/vector-icons";
-import { setDoc } from "firebase/firestore";
 
 
 type Message = {
@@ -218,7 +218,7 @@ export default function ChatDetailScreen() {
             <Text style={styles.actionText}>Check Info</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
+          <TouchableOpacitydle
             style={styles.actionBtn}
             onPress={() => handleCompleteTransaction()}
           >
