@@ -23,6 +23,7 @@ import {
   updateDoc,
   addDoc,
   serverTimestamp,
+  deleteDoc,         
 } from "firebase/firestore";
 import { db, auth } from "../../firebase/firebaseConfig";
 
@@ -38,6 +39,7 @@ export default function UserHomepageScreen() {
   const params = useLocalSearchParams();
   const profileUid = params.uid as string | undefined;
 
+  
   const viewingUid = profileUid ?? user?.uid ?? null;
 
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -51,7 +53,6 @@ export default function UserHomepageScreen() {
     avatar3: require("../../assets/images/user3.png"),
   };
 
-  
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -63,7 +64,6 @@ export default function UserHomepageScreen() {
     return null;
   };
 
- 
   const uploadToStorage = async (uri: string, path: string) => {
     const storage = getStorage();
     const blob: Blob = await new Promise((resolve, reject) => {
@@ -80,6 +80,7 @@ export default function UserHomepageScreen() {
     return await getDownloadURL(storageRef);
   };
 
+ 
   useEffect(() => {
     const fetchUserData = async () => {
       if (!viewingUid) return;
@@ -139,17 +140,16 @@ export default function UserHomepageScreen() {
     fetchListedItems();
   }, [viewingUid]);
 
-
   const openDetail = (id: string) => {
     router.push(`/item/${id}`);
   };
 
+ 
   const handleMarkAsSold = async (item: any) => {
     const currentUser = auth.currentUser;
     if (!currentUser) return;
 
     try {
-  
       await updateDoc(doc(db, "items", item.id), {
         status: "sold",
         soldAt: serverTimestamp(),
@@ -161,7 +161,6 @@ export default function UserHomepageScreen() {
         completedAt: serverTimestamp(),
       });
 
-
       setListedItems((prev) =>
         prev.map((it) =>
           it.id === item.id ? { ...it, status: "sold" } : it
@@ -169,6 +168,40 @@ export default function UserHomepageScreen() {
       );
     } catch (e) {
       console.log("mark as sold error:", e);
+    }
+  };
+
+
+  const handleUnmarkSold = async (item: any) => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+
+    try {
+  
+      await updateDoc(doc(db, "items", item.id), {
+        status: "active",
+        soldAt: null,
+        soldBy: null,
+      });
+
+      const soldRef = collection(db, "users", currentUser.uid, "sold");
+      const snap = await getDocs(soldRef);
+      for (const docSnap of snap.docs) {
+        if (docSnap.data().itemId === item.id) {
+          await deleteDoc(
+            doc(db, "users", currentUser.uid, "sold", docSnap.id)
+          );
+        }
+      }
+
+   
+      setListedItems((prev) =>
+        prev.map((it) =>
+          it.id === item.id ? { ...it, status: "active" } : it
+        )
+      );
+    } catch (e) {
+      console.log("undo sold error:", e);
     }
   };
 
@@ -196,13 +229,7 @@ export default function UserHomepageScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-     
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
-        </View>
-
+  
     
         <View style={styles.profileHeader}>
           <TouchableOpacity
@@ -227,9 +254,11 @@ export default function UserHomepageScreen() {
             }}
           >
             <Image
-              source={userProfile.backgroundUrl
-                ? { uri: userProfile.backgroundUrl }
-                : avatarSource}
+              source={
+                userProfile.backgroundUrl
+                  ? { uri: userProfile.backgroundUrl }
+                  : avatarSource
+              }
               style={styles.backgroundImage}
               blurRadius={userProfile.backgroundUrl ? 0 : 10}
             />
@@ -248,6 +277,7 @@ export default function UserHomepageScreen() {
           </View>
         </View>
 
+    
         <View style={styles.itemsContainer}>
           {listedItems.length === 0 ? (
             <Text style={styles.noItems}>No items listed yet.</Text>
@@ -274,13 +304,27 @@ export default function UserHomepageScreen() {
                     </View>
                   </TouchableOpacity>
 
-                  {isOwnProfile && !isSold && (
-                    <TouchableOpacity
-                      style={styles.soldButton}
-                      onPress={() => handleMarkAsSold(item)}
-                    >
-                      <Text style={styles.soldButtonText}>Sold</Text>
-                    </TouchableOpacity>
+             
+                  {isOwnProfile && (
+                    <>
+                      {!isSold ? (
+                   
+                        <TouchableOpacity
+                          style={styles.soldButton}
+                          onPress={() => handleMarkAsSold(item)}
+                        >
+                          <Text style={styles.soldButtonText}>Sold</Text>
+                        </TouchableOpacity>
+                      ) : (
+                   
+                        <TouchableOpacity
+                          style={styles.undoButton}
+                          onPress={() => handleUnmarkSold(item)}
+                        >
+                          <Text style={styles.undoButtonText}>Undo</Text>
+                        </TouchableOpacity>
+                      )}
+                    </>
                   )}
                 </View>
               );
@@ -294,11 +338,7 @@ export default function UserHomepageScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
-
-  header: { paddingHorizontal: 15, paddingVertical: 10 },
-
   profileHeader: { marginBottom: 10 },
-
   backgroundImage: { width: "100%", height: 200 },
 
   profileInfoContainer: {
@@ -366,6 +406,20 @@ const styles = StyleSheet.create({
   },
   soldButtonText: {
     color: "#fff",
+    fontWeight: "600",
+  },
+
+ 
+  undoButton: {
+    backgroundColor: "#e5e7eb",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignSelf: "center",
+    marginLeft: 8,
+  },
+  undoButtonText: {
+    color: "#111827",
     fontWeight: "600",
   },
 });
