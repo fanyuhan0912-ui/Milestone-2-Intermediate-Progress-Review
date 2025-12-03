@@ -117,9 +117,6 @@ return (
        
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Profile</Text>
-          <TouchableOpacity onPress={handleLogout}>
-            <Ionicons name="settings-outline" size={24} color="#000" />
-          </TouchableOpacity>
         </View>
 
  
